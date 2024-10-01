@@ -1,0 +1,55 @@
+---
+- name: update cache
+  apt:
+    update_cache: yes
+
+- name: install dependencies
+  apt:
+    name:
+      - curl
+      - wget
+      - nginx
+    state: present
+
+- name: install x-ui
+  shell: |
+    if ! command -v x-ui &> /dev/null; then
+      yes n | bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+    fi
+  args:
+    executable: /bin/bash
+
+- name: enable and start x-ui service
+  systemd:
+    name: x-ui
+    enabled: yes
+    state: started
+
+- name: copy backup db to server
+  copy:
+    src: "{{ playbook_dir }}/roles/xui/files/x-ui.db"
+    dest: /etc/x-ui/x-ui.db
+    mode: 0644
+  when: backup_db | default(false)
+
+
+- name: configure x-ui settings
+  shell: |
+    /usr/local/x-ui/x-ui setting -port {{ xui_port  }} -username {{ xui_username }} -password {{ xui_password }}
+  args:
+    executable: /bin/bash
+  vars:
+    xui_username: "{{ lookup('env', 'XUI_USERNAME') }}"
+    xui_password: "{{ lookup('env', 'XUI_PASSWORD') }}"
+    xui_port: "{{ lookup('env', 'XUI_PORT') }}"
+
+- name: restart x-ui service
+  systemd:
+    name: x-ui
+    state: restarted
+
+- name: restart nginx service
+  systemd:
+    name: nginx
+    state: restarted
+
