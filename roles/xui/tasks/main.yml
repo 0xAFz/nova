@@ -5,6 +5,7 @@
 
 - name: install dependencies
   apt:
+    update_cache: yes
     name:
       - curl
       - wget
@@ -25,17 +26,9 @@
     enabled: yes
     state: started
 
-- name: copy backup db to server
-  copy:
-    src: "{{ playbook_dir }}/roles/xui/files/x-ui.db"
-    dest: /etc/x-ui/x-ui.db
-    mode: 0644
-  when: backup_db | default(false)
-
-
 - name: configure x-ui settings
   shell: |
-    /usr/local/x-ui/x-ui setting -port {{ xui_port  }} -username {{ xui_username }} -password {{ xui_password }}
+    /usr/local/x-ui/x-ui setting -port {{ xui_port  }} -username {{ xui_username }} -password {{ xui_password }} -webBasePath / && /usr/local/x-ui/x-ui migrate
   args:
     executable: /bin/bash
   vars:
@@ -48,8 +41,43 @@
     name: x-ui
     state: restarted
 
-- name: restart nginx service
-  systemd:
-    name: nginx
-    state: restarted
+- name: deploy nginx server conf
+  template:
+    src: templates/nginx.j2
+    dest: /etc/nginx/sites-available/nova.conf
+  notify:
+    - reload nginx
+  vars:
+    subdomain: "nova.{{ lookup('env', 'DOMAIN')  }}"
+
+- name: create symbolic link for nova conf
+  file:
+    src: /etc/nginx/sites-available/nova.conf
+    dest: /etc/nginx/sites-enabled/nova.conf
+    state: link
+
+- name: test nova conf
+  command: nginx -t
+  register: nginx_test
+  failed_when: nginx_test.rc != 0
+  notify:
+    - restart nginx
+
+- name: create SSL directory if not exists
+  file:
+    path: /etc/nginx/ssl/nova
+    state: directory
+    mode: '0755'
+
+- name: copy public key to server
+  copy:
+    src: "{{ playbook_dir }}/roles/xui/files/certs/pubkey.pem"
+    dest: /etc/nginx/ssl/nova/pubkey.pem
+    mode: '0644'
+
+- name: copy private key to server
+  copy:
+    src: "{{ playbook_dir }}/roles/xui/files/certs/private.key"
+    dest: /etc/nginx/ssl/nova/private.key
+    mode: '0600'
 
