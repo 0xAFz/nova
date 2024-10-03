@@ -10,6 +10,7 @@
       - curl
       - wget
       - nginx
+      - sqlite3
     state: present
 
 - name: install x-ui
@@ -47,9 +48,7 @@
     dest: /etc/nginx/sites-available/nova.conf
   notify:
     - reload nginx
-  vars:
-    subdomain: "nova.{{ lookup('env', 'DOMAIN')  }}"
-
+    
 - name: create symbolic link for nova conf
   file:
     src: /etc/nginx/sites-available/nova.conf
@@ -80,4 +79,24 @@
     src: "{{ playbook_dir }}/roles/xui/files/certs/private.key"
     dest: /etc/nginx/ssl/nova/private.key
     mode: '0600'
+
+- name: check if inbound already exists
+  shell: |
+    sqlite3 /etc/x-ui/x-ui.db "SELECT COUNT(*) FROM inbounds WHERE id = 1;"
+  args:
+    executable: /bin/bash
+  register: inbound_check
+  changed_when: inbound_check.stdout != "1"
+
+- name: add inbound if not already present
+  script: "{{ playbook_dir  }}/inbound.sh"
+  args:
+    executable: /bin/bash
+  when: inbound_check.stdout == "0"
+  changed_when: true
+  environment:
+    DOMAIN: "{{ domain  }}"
+  register: inbound_output
+  notify:
+    - restart x-ui
 
