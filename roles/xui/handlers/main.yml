@@ -8,3 +8,8 @@
     name: nginx
     state: restarted
 
+- name: restart x-ui
+  systemd:
+    name: x-ui
+    state: restarted
+
