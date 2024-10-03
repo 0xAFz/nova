@@ -83,11 +83,11 @@ def main():
     records = get_dns_records_list()
     records_dict = get_dns_record_dict(records)
 
-    record = records_dict.get("nova")
+    record = records_dict.get(f"nova.{config['DOMAIN']}")
 
     if record:
         deleted = delete_dns_record(record["id"])
-        if deleted is None:
+        if deleted:
             created = create_dns_record("A", f"nova.{config['DOMAIN']}", ip_address, True)
             if created:
                 print("DNS record updated")
