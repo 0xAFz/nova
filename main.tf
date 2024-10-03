@@ -36,8 +36,8 @@ variable "OS_REGION_NAME" {
   type        = string
 }
 
-resource "openstack_compute_keypair_v2" "nova_pubkey" {
-  name       = "nova_pubkey"
+resource "openstack_compute_keypair_v2" "nova_pk" {
+  name       = "nova_pk"
   public_key = file("~/.ssh/id_rsa.pub")
 }
 
@@ -45,7 +45,7 @@ resource "openstack_compute_instance_v2" "nova" {
   name            = "nova"
   image_name      = "Ubuntu-24.04-amd64"
   flavor_name     = "flavor_name"
-  key_pair        = openstack_compute_keypair_v2.nova_pubkey.name
+  key_pair        = openstack_compute_keypair_v2.nova_pk.name
 
   security_groups = ["allow_all"]
 
