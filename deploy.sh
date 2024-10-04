@@ -1,13 +1,13 @@
-#!/bin/bash
+#!/bin/sh
 
-source ./.env
+. ./.env
 
 if [ ! -d ".venv" ]; then
 	python3 -m venv .venv
-	source .venv/bin/activate
+	. .venv/bin/activate
 	pip install -r requirements.txt
 else
-	source .venv/bin/activate
+	. .venv/bin/activate
 fi
 
 check_ping() {

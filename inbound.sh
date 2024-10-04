@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 SUBDOMAIN="nova.$DOMAIN"
 db_path="/etc/x-ui/x-ui.db"
