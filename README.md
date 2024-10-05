@@ -11,7 +11,6 @@ This project provides an end-to-end automation solution for setting up a VPN usi
    - [OpenStack Credentials](#openstack-credentials)
    - [SSH Key Pair Generation](#ssh-key-pair-generation)
    - [Domain Certificates](#domain-certificates)
-   - [Terraform Configuration](#terraform-configuration)
 5. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -131,29 +130,6 @@ If using a domain, generate SSL certificates using acme.sh:
    ```
 
 Reference: [acme.sh Documentation](https://github.com/acmesh-official/acme.sh)
-
-### Terraform Configuration
-
-Update `main.tf` with your specific OpenStack details:
-
-1. Set the correct `image_name` for your desired OS.
-2. Update `flavor_name` to match your preferred instance type.
-3. Adjust the `network` name if different in your OpenStack setup.
-
-Example:
-```hcl
-resource "openstack_compute_instance_v2" "nova" {
-  name            = "nova"
-  image_name      = "Ubuntu-24.04-amd64"
-  flavor_name     = "m1.small"
-  key_pair        = openstack_compute_keypair_v2.nova_pk.name
-  security_groups = ["allow_all"]
-  network {
-    name = "your_network_name"
-  }
-  # ... rest of the configuration
-}
-```
 
 ## Troubleshooting
 
