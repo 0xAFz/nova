@@ -2,7 +2,7 @@
 - hosts: all
   become: yes
   vars:
-    domain: "{{ lookup('env', 'DOMAIN')  }}"
+    domain: "{{ lookup('env', 'DOMAIN') | default('')  }}"
   roles:
     - xui
 
