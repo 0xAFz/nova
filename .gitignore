@@ -162,10 +162,11 @@ cython_debug/
 #.idea/
 
 # Terraform
-.terraform.lock.hcl
+*.lock.hcl
 .terraform/
-terraform.tfstate
-terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
 
 # Ansible
 inventory.yml
