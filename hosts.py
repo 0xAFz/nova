@@ -1,8 +1,9 @@
 import json
 import yaml
 import sys
+
 def print_help():
-    print("Usage: terraform show --json | python3 main.py")
+    print("Usage: terraform show -json | python3 hosts.py")
 
 def parse_input():
     if not sys.stdin.isatty():
