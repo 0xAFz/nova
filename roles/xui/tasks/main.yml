@@ -9,9 +9,15 @@
     name:
       - curl
       - wget
+    state: present
+
+- name: install nginx
+  apt:
+    update_cache: yes
+    name:
       - nginx
       - sqlite3
-    state: present
+  when: domain != ''
 
 - name: install x-ui
   shell: |
@@ -48,12 +54,14 @@
     dest: /etc/nginx/sites-available/nova.conf
   notify:
     - reload nginx
+  when: domain != ''
     
 - name: create symbolic link for nova conf
   file:
     src: /etc/nginx/sites-available/nova.conf
     dest: /etc/nginx/sites-enabled/nova.conf
     state: link
+  when: domain != ''
 
 - name: test nova conf
   command: nginx -t
@@ -61,24 +69,28 @@
   failed_when: nginx_test.rc != 0
   notify:
     - restart nginx
+  when: domain != ''
 
 - name: create SSL directory if not exists
   file:
     path: /etc/nginx/ssl/nova
     state: directory
     mode: '0755'
+  when: domain != ''
 
 - name: copy public key to server
   copy:
     src: "{{ playbook_dir }}/roles/xui/files/certs/pubkey.pem"
     dest: /etc/nginx/ssl/nova/pubkey.pem
     mode: '0644'
+  when: domain != ''
 
 - name: copy private key to server
   copy:
     src: "{{ playbook_dir }}/roles/xui/files/certs/private.key"
     dest: /etc/nginx/ssl/nova/private.key
     mode: '0600'
+  when: domain != ''
 
 - name: check if inbound already exists
   shell: |
@@ -86,16 +98,16 @@
   args:
     executable: /bin/bash
   register: inbound_check
-  changed_when: inbound_check.stdout != "1"
+  when: domain != ''
 
 - name: add inbound if not already present
-  script: "{{ playbook_dir  }}/inbound.sh"
+  script: "{{ playbook_dir }}/inbound.sh"
   args:
     executable: /bin/bash
-  when: inbound_check.stdout == "0"
-  changed_when: true
+  when: domain != '' and inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
+  changed_when: inbound_output.rc == 0
   environment:
-    DOMAIN: "{{ domain  }}"
+    DOMAIN: "{{ domain }}"
   register: inbound_output
   notify:
     - restart x-ui
