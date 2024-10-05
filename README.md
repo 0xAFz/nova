@@ -1,6 +1,18 @@
 # Nova
 
-This project provides an end-to-end automation solution for setting up a VPN using Terraform, Ansible, Bash, and Python3. It's designed to simplify the process of deploying a VPN server on OpenStack and managing DNS with Cloudflare.
+This project provides an end-to-end automation solution for setting up a VPN using Terraform, Ansible, Bash, and Python3. It's designed to simplify the process of deploying a VPN server on OpenStack, with optional DNS management through Cloudflare.
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Setup Instructions](#setup-instructions)
+3. [Usage](#usage)
+4. [Detailed Configuration Steps](#detailed-configuration-steps)
+   - [Cloudflare Credentials](#cloudflare-credentials)
+   - [OpenStack Credentials](#openstack-credentials)
+   - [SSH Key Pair Generation](#ssh-key-pair-generation)
+   - [Domain Certificates](#domain-certificates)
+   - [Terraform Configuration](#terraform-configuration)
+5. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
@@ -11,86 +23,146 @@ Before you begin, ensure you have the following installed on your system:
 3. [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell))
 4. [python3](https://python.org)
 
-You'll also need to have accounts and credentials for:
-
+You'll also need accounts for:
 - OpenStack
-- Cloudflare
+- Cloudflare (if using the domain-based setup)
 
 ## Setup Instructions
 
 1. Clone this repository to your local machine.
+   ```bash
+   git clone https://github.com/0xAFz/nova.git
 
-2. Edit the following files to customize the setup for your environment:
+   cd nova/
+   ```
 
-   a. In `main.tf`:
-      - Change the `flavor_name` in the `openstack_compute_instance_v2` resource to match your desired OpenStack instance type.
+2. Copy the `.env.example` file to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-   b. In `deploy.sh`:
-      - Set the following environment variables:
-        - `XUI_USERNAME`: Desired username for X-UI panel
-        - `XUI_PASSWORD`: Desired password for X-UI panel
-        - `XUI_PORT`: Desired port for X-UI panel
-        - `DOMAIN`: Your domain name
-        - `CLOUDFLARE_EMAIL`: Your Cloudflare account email
-        - `CLOUDFLARE_API_KEY`: Your Cloudflare API key
-        - `ZONE_ID`: Your Cloudflare zone ID
-        - `TF_VAR_OS_USERNAME`: Your OpenStack username
-        - `TF_VAR_OS_TENANT_NAME`: Your OpenStack tenant name
-        - `TF_VAR_OS_PASSWORD`: Your OpenStack password
-        - `TF_VAR_OS_AUTH_URL`: Your OpenStack authentication URL
-        - `TF_VAR_OS_REGION_NAME`: Your OpenStack region
+3. Edit the `.env` file and fill in your specific details. See the [Detailed Configuration Steps](#detailed-configuration-steps) section for guidance on obtaining these credentials.
 
-3. Ensure your SSH public key is located at `~/.ssh/id_rsa.pub`. This will be used to access the created VM.
+4. If you're using a domain, ensure the `DOMAIN` variable in `.env` is set. If not using a domain, either comment out this line or set it to an empty value:
+   ```
+   DOMAIN=
+   ```
+
+5. Make the `nova.sh` script executable:
+   ```
+   chmod +x nova.sh
+   ```
+
+6. Review and update the `main.tf` file with your specific OpenStack details (see [Terraform Configuration](#terraform-configuration)).
+
+7. If using a domain, generate SSL certificates (see [Domain Certificates](#domain-certificates)).
 
 ## Usage
 
-Once you've completed the setup, follow these steps to deploy your VPN:
+The project now supports two main operations: `up` and `down`.
 
-1. Open a terminal and navigate to the project directory.
+To start the VPN server:
+```bash
+./nova.sh up
+```
 
-2. Make the `deploy.sh` script executable:
+To destroy the VPN server and associated resources:
+```bash
+./nova.sh down
+```
+
+## Detailed Configuration Steps
+
+### Cloudflare Credentials
+
+If you're using a domain with Cloudflare:
+
+1. Log in to your Cloudflare account.
+2. Navigate to "My Profile" > "API Tokens".
+3. Create a new API token with permissions for DNS editing.
+4. Copy the API key, email, and Zone ID into your `.env` file.
+
+Reference: [Cloudflare API Documentation](https://developers.cloudflare.com/api/)
+
+### OpenStack Credentials
+
+To obtain OpenStack credentials:
+
+1. Log in to your OpenStack dashboard.
+2. Navigate to "Access & Security" > "API Access".
+3. Download the OpenRC file.
+4. Source the OpenRC file and copy the values into your `.env` file.
+
+Alternatively, use the OpenStack CLI:
+```bash
+openstack credentials show
+```
+
+Reference: [OpenStack CLI Documentation](https://docs.openstack.org/python-openstackclient/latest/)
+
+### SSH Key Pair Generation
+
+Generate an SSH key pair if you don't already have one:
+
+```bash
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+
+This will create `id_rsa` (private key) and `id_rsa.pub` (public key) in your `~/.ssh/` directory.
+
+### Domain Certificates
+
+If using a domain, generate SSL certificates using acme.sh:
+
+1. Install acme.sh:
+   ```bash
+   curl https://get.acme.sh | sh
    ```
-   chmod +x deploy.sh
+
+2. Generate certificates in standalone mode:
+   ```bash
+   acme.sh --issue -d your_domain.tld --standalone
    ```
 
-3. Run the deployment script:
+3. Copy the generated certificates:
+   ```bash
+   cp ~/.acme.sh/your_domain.tld/fullchain.cer       roles/xui/files/certs/pubkey.pem
+   cp ~/.acme.sh/your_domain.tld/your_domain.tld.key roles/xui/files/certs/private.key
    ```
-   ./deploy.sh
-   ```
 
-4. The script will perform the following actions:
-   - Create a Python virtual environment and install required packages
-   - Set up environment variables
-   - Initialize Terraform and create the infrastructure
-   - Use Python to process Terraform output
-   - Wait for the VM to become reachable
-   - Run the Ansible playbook to configure the X-UI panel
+Reference: [acme.sh Documentation](https://github.com/acmesh-official/acme.sh)
 
-5. Once the script completes, your VPN server should be set up and ready to use.
+### Terraform Configuration
 
-## What's Happening Behind the Scenes
+Update `main.tf` with your specific OpenStack details:
 
-1. Terraform creates a VM on OpenStack with the specified configuration.
-2. A Python script processes the Terraform output to create an Ansible inventory.
-3. Ansible connects to the VM and installs/configures the X-UI panel.
-4. Cloudflare DNS is updated to point your domain to the new VM's IP address.
+1. Set the correct `image_name` for your desired OS.
+2. Update `flavor_name` to match your preferred instance type.
+3. Adjust the `network` name if different in your OpenStack setup.
+
+Example:
+```hcl
+resource "openstack_compute_instance_v2" "nova" {
+  name            = "nova"
+  image_name      = "Ubuntu-24.04-amd64"
+  flavor_name     = "m1.small"
+  key_pair        = openstack_compute_keypair_v2.nova_pk.name
+  security_groups = ["allow_all"]
+  network {
+    name = "your_network_name"
+  }
+  # ... rest of the configuration
+}
+```
 
 ## Troubleshooting
 
 - If the script fails, check the error messages for clues about what went wrong.
-- Ensure all credentials and environment variables are correctly set.
-- Verify that your OpenStack and Cloudflare accounts have the necessary permissions.
+- Ensure all credentials in the `.env` file are correct.
+- Verify that your OpenStack and Cloudflare (if used) accounts have the necessary permissions.
+- If using a domain, make sure the DNS records are properly set up in Cloudflare.
+- Check that the SSH key pair is correctly generated and placed in the default location (`~/.ssh/id_rsa.pub`).
 
-## Security Note
+For any persistent issues, please open an issue in the project's repository.
 
-This script contains sensitive information (passwords, API keys). Ensure you keep the `deploy.sh` file secure and do not share it publicly.
-
-## Customization
-
-You can modify the `main.tf` file to change the VM specifications or the `xui.yml` Ansible playbook to adjust the VPN configuration.
-
-## Support
-
-If you encounter any issues or have questions, please open an issue in the project's repository.
-
-Remember to replace any placeholder values with your actual information before using this setup.
+Remember to keep your `.env` file and SSH keys secure and never share them publicly.
