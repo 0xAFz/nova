@@ -1,85 +1,144 @@
 # Nova
 
-This project provides an end-to-end automation solution for setting up a VPN using Terraform, Ansible, Bash, and Python3. It's designed to simplify the process of deploying a VPN server on OpenStack, with optional DNS management through Cloudflare.
+Nova automates the setup of a VPN server using Terraform, Ansible, Bash, and Python3 on OpenStack, with optional DNS management via Cloudflare. The project simplifies VPN deployment and configuration through a unified automation script, handling everything from infrastructure provisioning to domain setup.
 
 ## Table of Contents
+
 1. [Prerequisites](#prerequisites)
 2. [Setup Instructions](#setup-instructions)
 3. [Usage](#usage)
-4. [Detailed Configuration Steps](#detailed-configuration-steps)
+4. [Environment Configuration](#environment-configuration)
+   - [Populating the `.env` File](#populating-the-env-file)
+   - [Example `.env` File](#example-env-file)
+5. [Detailed Configuration Steps](#detailed-configuration-steps)
    - [Cloudflare Credentials](#cloudflare-credentials)
    - [OpenStack Credentials](#openstack-credentials)
    - [SSH Key Pair Generation](#ssh-key-pair-generation)
    - [Domain Certificates](#domain-certificates)
-5. [Troubleshooting](#troubleshooting)
+6. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed on your system:
+Before you begin, ensure the following software is installed on your system:
 
-1. [terraform](https://terraform.io)
-2. [ansible](https://docs.ansible.com)
-3. [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell))
-4. [python3](https://python.org)
+1. **[Terraform](https://terraform.io)**
+2. **[Ansible](https://docs.ansible.com)**
+3. **[Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell))**
+4. **[Python3](https://python.org)**
 
-You'll also need accounts for:
-- OpenStack
-- Cloudflare (if using the domain-based setup)
+You will also need accounts for:
+- **OpenStack** (for infrastructure)
+- **Cloudflare** (if using domain-based setup)
 
 ## Setup Instructions
 
-1. Clone this repository to your local machine.
+1. Clone the repository to your local machine:
+
    ```bash
    git clone https://github.com/0xAFz/nova.git
-
    cd nova/
    ```
 
 2. Copy the `.env.example` file to `.env`:
+
    ```bash
    cp .env.example .env
    ```
 
-3. Edit the `.env` file and fill in your specific details. See the [Detailed Configuration Steps](#detailed-configuration-steps) section for guidance on obtaining these credentials.
+3. Edit the `.env` file and replace the placeholders with actual values (refer to the [Environment Configuration](#environment-configuration) section).
 
-4. If you're using a domain, ensure the `DOMAIN` variable in `.env` is set. If not using a domain, either comment out this line or set it to an empty value:
-   ```
-   DOMAIN=
-   ```
+4. Make the `nova.sh` script executable:
 
-5. Make the `nova.sh` script executable:
-   ```
+   ```bash
    chmod +x nova.sh
    ```
 
-6. Review and update the `main.tf` file with your specific OpenStack details (see [Terraform Configuration](#terraform-configuration)).
-
-7. If using a domain, generate SSL certificates (see [Domain Certificates](#domain-certificates)).
+5. You are now ready to run the script and deploy the VPN server!
 
 ## Usage
 
-The project now supports two main operations: `up` and `down`.
+Nova supports two main operations: `up` and `down`.
 
-To start the VPN server:
+- To start and deploy the VPN server, run:
+
+   ```bash
+   ./nova.sh up
+   ```
+
+   This will:
+   - Initialize Terraform and create the infrastructure.
+   - Set up the server with VPN capabilities.
+   - Optionally configure DNS records through Cloudflare (if a domain is provided).
+
+- To destroy the VPN server and associated resources, run:
+
+   ```bash
+   ./nova.sh down
+   ```
+
+## Environment Configuration
+
+### Populating the `.env` File
+
+The `.env` file contains crucial environment variables needed for the project. You must update the placeholder values with your actual credentials and information.
+
+The variables in `.env` are used across the Terraform, Ansible, and Python scripts to automate the setup. Ensure that all values are accurate before running the automation.
+
+### Example `.env` File
+
 ```bash
-./nova.sh up
+# XUI Panel Credentials
+export XUI_USERNAME=admin            # XUI panel username
+export XUI_PASSWORD=admin            # XUI panel password
+export XUI_PORT=2053                 # Port number for the XUI panel
+
+# Domain and Cloudflare (Optional)
+export DOMAIN=domain.tld             # Domain name (leave empty if not using a domain)
+export CLOUDFLARE_EMAIL=mail@domain.tld  # Cloudflare email address
+export CLOUDFLARE_API_KEY=xyz            # Cloudflare API key (for DNS edits)
+export ZONE_ID=xyz                       # Cloudflare Zone ID
+
+# OpenStack Credentials
+export TF_VAR_os_username=openstack_username     # Your OpenStack username
+export TF_VAR_os_tenant_name=openstack_tenant_name  # OpenStack project/tenant name
+export TF_VAR_os_password=openstack_password     # OpenStack password
+export TF_VAR_os_auth_url=openstack_auth_url     # OpenStack auth URL
+export TF_VAR_os_region_name=openstack_region_name  # OpenStack region name
+
+# SSH and VM Configuration
+export TF_VAR_public_key_path=~/.ssh/id_rsa.pub   # Path to your public SSH key
+export TF_VAR_machine_name=machine_name           # Name of the VM to be created
+export TF_VAR_image_name=image_name               # OpenStack image name (e.g., "Ubuntu 20.04")
+export TF_VAR_flavor_name=flavor_name             # OpenStack flavor (e.g., "m1.medium")
+export TF_VAR_network_name=network_name           # OpenStack network name
 ```
 
-To destroy the VPN server and associated resources:
-```bash
-./nova.sh down
-```
+### Steps to Replace `.env` Values
+
+1. **XUI Panel Credentials**:
+   - Set the username and password you want for the XUI panel.
+   - Specify the port for the XUI panel (e.g., `2053`).
+
+2. **Domain and Cloudflare Setup** (Optional):
+   - If you are using a domain with Cloudflare, fill in your Cloudflare email, API key, and Zone ID. Leave `DOMAIN` empty if you’re not using DNS.
+
+3. **OpenStack Configuration**:
+   - Replace the placeholders with your OpenStack credentials, which can be obtained from the OpenStack dashboard or the OpenRC file.
+
+4. **SSH and VM Configuration**:
+   - Ensure the path to your SSH public key is correct (usually `~/.ssh/id_rsa.pub`).
+   - Specify the name, image, flavor, and network for the VM that will be created.
 
 ## Detailed Configuration Steps
 
 ### Cloudflare Credentials
 
-If you're using a domain with Cloudflare:
+To use DNS management via Cloudflare:
 
-1. Log in to your Cloudflare account.
-2. Navigate to "My Profile" > "API Tokens".
-3. Create a new API token with permissions for DNS editing.
-4. Copy the API key, email, and Zone ID into your `.env` file.
+1. Log into your Cloudflare account.
+2. Go to **My Profile** > **API Tokens**.
+3. Create a new API token with DNS edit permissions.
+4. Copy the API key, email, and Zone ID into the `.env` file.
 
 Reference: [Cloudflare API Documentation](https://developers.cloudflare.com/api/)
 
@@ -87,12 +146,12 @@ Reference: [Cloudflare API Documentation](https://developers.cloudflare.com/api/
 
 To obtain OpenStack credentials:
 
-1. Log in to your OpenStack dashboard.
-2. Navigate to "Access & Security" > "API Access".
-3. Download the OpenRC file.
-4. Source the OpenRC file and copy the values into your `.env` file.
+1. Log into the OpenStack dashboard.
+2. Go to **Access & Security** > **API Access** and download the OpenRC file.
+3. Source the OpenRC file and copy the values into your `.env` file.
 
 Alternatively, use the OpenStack CLI:
+
 ```bash
 openstack credentials show
 ```
@@ -101,29 +160,32 @@ Reference: [OpenStack CLI Documentation](https://docs.openstack.org/python-opens
 
 ### SSH Key Pair Generation
 
-Generate an SSH key pair if you don't already have one:
+If you don’t already have an SSH key pair:
 
 ```bash
 ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 ```
 
-This will create `id_rsa` (private key) and `id_rsa.pub` (public key) in your `~/.ssh/` directory.
+This will generate `id_rsa` (private key) and `id_rsa.pub` (public key) in your `~/.ssh/` directory.
 
 ### Domain Certificates
 
-If using a domain, generate SSL certificates using acme.sh:
+If using a domain, generate SSL certificates using **acme.sh**:
 
-1. Install acme.sh:
+1. Install **acme.sh**:
+
    ```bash
    curl https://get.acme.sh | sh
    ```
 
-2. Generate certificates in standalone mode:
+2. Issue certificates:
+
    ```bash
    acme.sh --issue -d your_domain.tld --standalone
    ```
 
 3. Copy the generated certificates:
+
    ```bash
    cp ~/.acme.sh/your_domain.tld/fullchain.cer       roles/xui/files/certs/pubkey.pem
    cp ~/.acme.sh/your_domain.tld/your_domain.tld.key roles/xui/files/certs/private.key
@@ -133,12 +195,8 @@ Reference: [acme.sh Documentation](https://github.com/acmesh-official/acme.sh)
 
 ## Troubleshooting
 
-- If the script fails, check the error messages for clues about what went wrong.
-- Ensure all credentials in the `.env` file are correct.
-- Verify that your OpenStack and Cloudflare (if used) accounts have the necessary permissions.
-- If using a domain, make sure the DNS records are properly set up in Cloudflare.
-- Check that the SSH key pair is correctly generated and placed in the default location (`~/.ssh/id_rsa.pub`).
-
-For any persistent issues, please open an issue in the project's repository.
-
-Remember to keep your `.env` file and SSH keys secure and never share them publicly.
+- **General Failures**: Check the error messages and logs to understand the cause of the failure.
+- **Environment Variables**: Ensure all values in the `.env` file are correct.
+- **SSH Issues**: Verify that your SSH key pair is generated correctly and located in the right directory (`~/.ssh/id_rsa.pub`).
+- **Cloudflare DNS**: If using a domain, confirm that your DNS records are correctly set up in Cloudflare.
+- **Permissions**: Ensure that your OpenStack and Cloudflare accounts have the necessary permissions.
