@@ -20,7 +20,7 @@ run_up() {
 	terraform init && \
 	terraform plan && \
 	terraform apply -auto-approve && \
-	terraform show -json | python3 hosts.py
+	terraform output -json | python3 hosts.py
 
 	if [ "$?" -ne 0 ]; then
 		echo "hosts.py failed to generate inventory.yml file. Exiting..."

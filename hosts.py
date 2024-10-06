@@ -4,7 +4,7 @@ import sys
 
 
 def print_help():
-    print("Usage: terraform show -json | python3 hosts.py")
+    print("Usage: terraform output -json | python3 hosts.py")
 
 
 def parse_input():
