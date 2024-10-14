@@ -9,7 +9,7 @@ resource "openstack_compute_instance_v2" "nova" {
   flavor_name = var.flavor_name
   key_pair    = openstack_compute_keypair_v2.nova_pk.name
 
-  security_groups = ["allow_all"]
+  security_groups = var.security_groups
 
   network {
     name = var.network_name

@@ -13,6 +13,7 @@ def get_env(key):
 def load_env():
     return {
             "DOMAIN": get_env("DOMAIN"),
+            "SUBDOMAIN": get_env("SUBDOMAIN"),
             "CLOUDFLARE_EMAIL": get_env("CLOUDFLARE_EMAIL"),
             "CLOUDFLARE_API_KEY": get_env("CLOUDFLARE_API_KEY"),
             "ZONE_ID": get_env("ZONE_ID"),
@@ -51,16 +52,16 @@ def main():
     records = get_dns_records_list()
     records_dict = get_dns_record_dict(records)
 
-    record = records_dict.get(f"nova.{config['DOMAIN']}")
+    record = records_dict.get(f"{config['SUBDOMAIN']}.{config['DOMAIN']}")
 
     if record:
         deleted = delete_dns_record(record["id"])
         if deleted:
-            created = create_dns_record("A", f"nova.{config['DOMAIN']}", ip_address, True)
+            created = create_dns_record("A", f"{config['SUBDOMAIN']}.{config['DOMAIN']}", ip_address, True)
             if created:
                 print("DNS record updated")
     else:
-        created = create_dns_record("A", f"nova.{config['DOMAIN']}", ip_address, True)
+        created = create_dns_record("A", f"{config['DOMAIN']}.{config['DOMAIN']}", ip_address, True)
         if created:
             print("New DNS record created")
 

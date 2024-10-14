@@ -3,6 +3,7 @@
   become: yes
   vars:
     domain: "{{ lookup('env', 'DOMAIN') | default('')  }}"
+    subdomain: "{{ lookup('env', 'SUBDOMAIN') | default('')  }}"
   roles:
     - xui
 

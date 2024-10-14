@@ -51,3 +51,9 @@ variable "network_name" {
   type        = string
 }
 
+variable "security_groups" {
+  description = "OpenStack security groups list"
+  type        = list(string)
+  default     = ["allow_all"]
+}
+
