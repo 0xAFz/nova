@@ -3,21 +3,25 @@
   apt:
     update_cache: yes
 
-- name: install dependencies
+- name: install basic tools
   apt:
     update_cache: yes
     name:
       - curl
       - wget
+      - vim
+      - htop
     state: present
 
-- name: install nginx
+- name: install web tools
   apt:
     update_cache: yes
     name:
       - nginx
+      - certbot
+      - python3-certbot-nginx
       - sqlite3
-  when: domain != ''
+  when: domain != '' and subdomain != ''
 
 - name: install x-ui
   shell: |
@@ -48,49 +52,32 @@
     name: x-ui
     state: restarted
 
-- name: deploy nginx server conf
+- name: deploy nginx conf
   template:
     src: templates/nginx.j2
-    dest: /etc/nginx/sites-available/nova.conf
+    dest: /etc/nginx/conf.d/{{ subdomain }}.{{ domain  }}.conf
+    owner: root
+    group: root
+    mode: '0644'
   notify:
     - reload nginx
-  when: domain != ''
+  when: domain != '' and subdomain != ''
     
-- name: create symbolic link for nova conf
-  file:
-    src: /etc/nginx/sites-available/nova.conf
-    dest: /etc/nginx/sites-enabled/nova.conf
-    state: link
-  when: domain != ''
+- name: check if certs dir exists
+  stat:
+    path: /etc/letsencrypt/live/{{ domain }}/
+  register: certs_file
+  when: domain != '' and subdomain != ''
 
-- name: test nova conf
-  command: nginx -t
-  register: nginx_test
-  failed_when: nginx_test.rc != 0
-  notify:
-    - restart nginx
-  when: domain != ''
-
-- name: create SSL directory if not exists
-  file:
-    path: /etc/nginx/ssl/nova
-    state: directory
-    mode: '0755'
-  when: domain != ''
-
-- name: copy public key to server
-  copy:
-    src: "{{ playbook_dir }}/roles/xui/files/certs/pubkey.pem"
-    dest: /etc/nginx/ssl/nova/pubkey.pem
-    mode: '0644'
-  when: domain != ''
-
-- name: copy private key to server
-  copy:
-    src: "{{ playbook_dir }}/roles/xui/files/certs/private.key"
-    dest: /etc/nginx/ssl/nova/private.key
-    mode: '0600'
-  when: domain != ''
+- name: get certificates
+  shell: |
+    iptables -F
+    systemctl stop nginx
+    certbot certonly --standalone --preferred-challenges http -d {{ subdomain }}.{{ domain }} --non-interactive --agree-tos -m {{ email }}
+    systemctl start nginx
+    systemctl restart iptables
+  changed_when: false
+  when: not certs_file.stat.exists and domain != '' and subdomain != ''
 
 - name: check if inbound already exists
   shell: |
@@ -98,17 +85,17 @@
   args:
     executable: /bin/bash
   register: inbound_check
-  when: domain != ''
+  when: domain != '' and subdomain != ''
 
 - name: add inbound if not already present
   script: "{{ playbook_dir }}/inbound.sh"
   args:
     executable: /bin/bash
-  when: domain != '' and inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
+  when: domain != '' and subdomain != '' and inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
   changed_when: inbound_output.rc == 0
   environment:
     DOMAIN: "{{ domain }}"
-  register: inbound_output
+    SUBDOMAIN: "{{ subdomain  }}"
   notify:
     - restart x-ui
 
