@@ -21,6 +21,7 @@
       - certbot
       - python3-certbot-nginx
       - sqlite3
+      - iptables-persistent
   when: domain != '' and subdomain != ''
 
 - name: install x-ui
@@ -92,6 +93,7 @@
   args:
     executable: /bin/bash
   when: domain != '' and subdomain != '' and inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
+  register: inbound_output
   changed_when: inbound_output.rc == 0
   environment:
     DOMAIN: "{{ domain }}"
