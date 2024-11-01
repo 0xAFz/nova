@@ -4,6 +4,7 @@
   vars:
     domain: "{{ lookup('env', 'DOMAIN') | default('')  }}"
     subdomain: "{{ lookup('env', 'SUBDOMAIN') | default('')  }}"
+    email: "{{ lookup('env', 'CLOUDFLARE_EMAIL') | default('')  }}"
   roles:
     - xui
 
