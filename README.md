@@ -9,12 +9,10 @@ Nova automates the setup of a VPN server using Terraform, Ansible, Bash, and Pyt
 3. [Usage](#usage)
 4. [Environment Configuration](#environment-configuration)
    - [Populating the `.env` File](#populating-the-env-file)
-   - [Example `.env` File](#example-env-file)
 5. [Detailed Configuration Steps](#detailed-configuration-steps)
    - [Cloudflare Credentials](#cloudflare-credentials)
    - [OpenStack Credentials](#openstack-credentials)
    - [SSH Key Pair Generation](#ssh-key-pair-generation)
-   - [Domain Certificates](#domain-certificates)
 6. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -84,35 +82,6 @@ The `.env` file contains crucial environment variables needed for the project. Y
 
 The variables in `.env` are used across the Terraform, Ansible, and Python scripts to automate the setup. Ensure that all values are accurate before running the automation.
 
-### Example `.env` File
-
-```bash
-# XUI Panel Credentials
-export XUI_USERNAME=admin            # XUI panel username
-export XUI_PASSWORD=admin            # XUI panel password
-export XUI_PORT=2053                 # Port number for the XUI panel
-
-# Domain and Cloudflare (Optional)
-export DOMAIN=domain.tld             # Domain name (leave empty if not using a domain)
-export CLOUDFLARE_EMAIL=mail@domain.tld  # Cloudflare email address
-export CLOUDFLARE_API_KEY=xyz            # Cloudflare API key (for DNS edits)
-export ZONE_ID=xyz                       # Cloudflare Zone ID
-
-# OpenStack Credentials
-export TF_VAR_os_username=openstack_username     # Your OpenStack username
-export TF_VAR_os_tenant_name=openstack_tenant_name  # OpenStack project/tenant name
-export TF_VAR_os_password=openstack_password     # OpenStack password
-export TF_VAR_os_auth_url=openstack_auth_url     # OpenStack auth URL
-export TF_VAR_os_region_name=openstack_region_name  # OpenStack region name
-
-# SSH and VM Configuration
-export TF_VAR_public_key_path=~/.ssh/id_rsa.pub   # Path to your public SSH key
-export TF_VAR_machine_name=machine_name           # Name of the VM to be created
-export TF_VAR_image_name=image_name               # OpenStack image name (e.g., "Ubuntu 20.04")
-export TF_VAR_flavor_name=flavor_name             # OpenStack flavor (e.g., "m1.medium")
-export TF_VAR_network_name=network_name           # OpenStack network name
-```
-
 ### Steps to Replace `.env` Values
 
 1. **XUI Panel Credentials**:
@@ -167,31 +136,6 @@ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 ```
 
 This will generate `id_rsa` (private key) and `id_rsa.pub` (public key) in your `~/.ssh/` directory.
-
-### Domain Certificates
-
-If using a domain, generate SSL certificates using **acme.sh**:
-
-1. Install **acme.sh**:
-
-   ```bash
-   curl https://get.acme.sh | sh
-   ```
-
-2. Issue certificates:
-
-   ```bash
-   acme.sh --issue -d your_domain.tld --standalone
-   ```
-
-3. Copy the generated certificates:
-
-   ```bash
-   cp ~/.acme.sh/your_domain.tld/fullchain.cer       roles/xui/files/certs/pubkey.pem
-   cp ~/.acme.sh/your_domain.tld/your_domain.tld.key roles/xui/files/certs/private.key
-   ```
-
-Reference: [acme.sh Documentation](https://github.com/acmesh-official/acme.sh)
 
 ## Troubleshooting
 
