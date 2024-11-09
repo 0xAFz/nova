@@ -2,10 +2,8 @@ import json
 import yaml
 import sys
 
-
 def print_help():
-    print("Usage: terraform output -json | python3 hosts.py")
-
+    print("Usage: terraform output -json instance_public_ip | python3 ansible/dynamic.py")
 
 def parse_input():
     if not sys.stdin.isatty():
@@ -14,7 +12,6 @@ def parse_input():
     else:
         print_help()
         sys.exit(1)
-
 
 def create_inventory(terraform_data):
     inventory = {"all": {"hosts": {}}}
@@ -28,11 +25,9 @@ def create_inventory(terraform_data):
 
     return inventory
 
-
 def write_inventory_to_file(inventory):
-    with open("inventory.yml", "w") as file:
+    with open("ansible/inventory.yml", "w") as file:
         yaml.dump(inventory, file, indent=2)
-
 
 def main():
     terraform_data = parse_input()

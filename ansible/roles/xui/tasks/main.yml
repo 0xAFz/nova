@@ -89,7 +89,7 @@
   when: domain != '' and subdomain != ''
 
 - name: add inbound if not already present
-  script: "{{ playbook_dir }}/inbound.sh"
+  script: files/inbound.sh
   args:
     executable: /bin/bash
   when: domain != '' and subdomain != '' and inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
@@ -100,4 +100,3 @@
     SUBDOMAIN: "{{ subdomain  }}"
   notify:
     - restart x-ui
-

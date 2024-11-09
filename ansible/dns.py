@@ -20,11 +20,11 @@ def load_env():
             }
 
 def load_inventory():
-    if not os.path.exists("inventory.yml"):
-        print("inventory.yml does not exist.")
+    if not os.path.exists("ansible/inventory.yml"):
+        print("ansible/inventory.yml does not exist.")
         sys.exit(1)
 
-    with open("inventory.yml", "r") as file:
+    with open("ansible/inventory.yml", "r") as file:
         inventory = yaml.safe_load(file)
 
     return inventory
@@ -74,4 +74,3 @@ if __name__ == "__main__":
     )
 
     main()
-
