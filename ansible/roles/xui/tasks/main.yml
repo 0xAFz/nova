@@ -1,8 +1,4 @@
 ---
-- name: update cache
-  apt:
-    update_cache: yes
-
 - name: install basic tools
   apt:
     update_cache: yes
@@ -17,11 +13,53 @@
   apt:
     update_cache: yes
     name:
-      - nginx
+      - curl 
+      - gnupg2 
+      - ca-certificates 
+      - lsb-release 
+      - debian-archive-keyring
       - certbot
       - python3-certbot-nginx
       - sqlite3
       - iptables-persistent
+    state: present
+  when: domain != '' and subdomain != ''
+
+- name: add nginx GPG key
+  shell: | 
+    curl -s https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+  when: domain != '' and subdomain != ''
+
+- name: add nginx official repository
+  shell: |
+    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/mainline/{{ ansible_facts['distribution'].lower() }} `lsb_release -cs` nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+    printf "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 1000\n" | sudo tee /etc/apt/preferences.d/99nginx
+  when: domain != '' and subdomain != ''
+
+- name: install latest nginx
+  apt:
+    update_cache: yes
+    name: "nginx=1.27.2-1~bookworm"
+    state: present
+  when: domain != '' and subdomain != ''
+
+- name: ensure nginx is enabled and running
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  when: domain != '' and subdomain != ''
+
+- name: check installed nginx version
+  command:
+    cmd: nginx -v
+  register: nginx_version
+  ignore_errors: true
+  when: domain != '' and subdomain != ''
+
+- name: debug nginx version
+  debug:
+    msg: "Installed NGINX version: {{ nginx_version.stderr }}"
   when: domain != '' and subdomain != ''
 
 - name: install x-ui
