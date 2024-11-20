@@ -1,12 +1,32 @@
 server {
-	listen 80;
-	root /var/www/html;
-	index index.html index.htm index.nginx-debian.html;
-
-	server_name {{ subdomain }}.{{ domain  }};
-
-	location / {
-		try_files $uri $uri/ =404;
-	}
+    listen 80;
+    server_name {{ subdomain }}.{{ domain  }};
+    return 301 https://{{ subdomain }}.{{ domain  }}$request_uri;
 }
 
+server {
+    listen 443 ssl;
+    listen 443 quic reuseport;
+
+    http2 on;
+
+    server_name {{ subdomain }}.{{ domain  }};
+
+    ssl_protocols TLSv1.3;
+    ssl_certificate /etc/letsencrypt/live/{{ subdomain }}.{{ domain  }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ subdomain }}.{{ domain  }}/privkey.pem;
+
+    add_header Alt-Svc 'h3=":443"; ma=86400';
+    add_header Cache-Control no-store;
+
+    ssl_early_data on;
+    quic_retry on;
+    quic_gso on;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
