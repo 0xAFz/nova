@@ -26,7 +26,7 @@ def create_inventory(terraform_data):
     return inventory
 
 def write_inventory_to_file(inventory):
-    with open("ansible/inventory.yml", "w") as file:
+    with open("ansible/hosts.yml", "w") as file:
         yaml.dump(inventory, file, indent=2)
 
 def main():

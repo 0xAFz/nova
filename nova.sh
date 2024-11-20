@@ -13,14 +13,15 @@ activate_venv() {
 }
 
 check_ping() {
-    ansible all -i ansible/inventory.yml -m ping --timeout 1
+    ansible all -i ansible/hosts.yml -m ping --timeout 1
 }
 
 run_up() {
     terraform -chdir=terraform init && \
     terraform -chdir=terraform plan && \
     terraform -chdir=terraform apply -auto-approve && \
-    terraform -chdir=terraform output -json | python3 ansible/dynamic.py
+    terraform -chdir=terraform output -json | python3 ansible/dynamic.py || \
+    exit 1
 
     if [ "$?" -ne 0 ]; then
         echo "hosts.py failed to generate inventory.yml file. Exiting..."
@@ -43,7 +44,7 @@ run_up() {
         sleep 1
     done
 
-    ansible-playbook -i ansible/inventory.yml ansible/xui.yml
+    ansible-playbook -i ansible/hosts.yml ansible/xui.yml
 }
 
 run_down() {
