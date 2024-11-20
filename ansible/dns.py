@@ -1,6 +1,8 @@
 import os
 import sys
 import yaml
+import json
+from datetime import datetime
 from cloudflare import Cloudflare
 
 def get_env(key):
@@ -20,11 +22,11 @@ def load_env():
             }
 
 def load_inventory():
-    if not os.path.exists("ansible/inventory.yml"):
-        print("ansible/inventory.yml does not exist.")
+    if not os.path.exists("ansible/hosts.yml"):
+        print("ansible/hosts.yml does not exist.")
         sys.exit(1)
 
-    with open("ansible/inventory.yml", "r") as file:
+    with open("ansible/hosts.yml", "r") as file:
         inventory = yaml.safe_load(file)
 
     return inventory
@@ -61,7 +63,7 @@ def main():
             if created:
                 print("DNS record updated")
     else:
-        created = create_dns_record("A", f"{config['DOMAIN']}.{config['DOMAIN']}", ip_address, True)
+        created = create_dns_record("A", f"{config['SUBDOMAIN']}.{config['DOMAIN']}", ip_address, True)
         if created:
             print("New DNS record created")
 
