@@ -92,8 +92,20 @@
     state: restarted
 
 - name: deploy nginx conf
+  copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - restart nginx
+  when: domain != '' and subdomain != ''
+  tags: nginx
+
+- name: deploy nova nginx conf
   template:
-    src: templates/nginx.j2
+    src: templates/nginx/nova.conf.j2
     dest: /etc/nginx/conf.d/{{ subdomain }}.{{ domain  }}.conf
     owner: root
     group: root
@@ -101,7 +113,8 @@
   notify:
     - reload nginx
   when: domain != '' and subdomain != ''
-    
+  tags: nginx
+  
 - name: check if certs dir exists
   stat:
     path: /etc/letsencrypt/live/{{ subdomain }}.{{ domain }}/
