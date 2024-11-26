@@ -1,30 +1,33 @@
 #!/bin/sh
 
-. ./.env
+set -euo pipefail
+
+cd $(dirname "$0") || exit 1
+
+source ./.env
 
 activate_venv() {
     if [ ! -d ".venv" ]; then
         python3 -m venv .venv
-        . .venv/bin/activate
-        pip install -r ansible/requirements.txt
+        source .venv/bin/activate
+        pip install -r requirements.txt
     else
-        . .venv/bin/activate
+        source .venv/bin/activate
     fi
 }
 
 check_ping() {
-    ansible all -i ansible/hosts.yml -m ping --timeout 1
+    ansible all -i ansible/inventory/hosts.yml -m ping --timeout 1
 }
 
 run_up() {
     terraform -chdir=terraform init && \
     terraform -chdir=terraform plan && \
     terraform -chdir=terraform apply -auto-approve && \
-    terraform -chdir=terraform output -json | python3 ansible/dynamic.py || \
-    exit 1
+    terraform -chdir=terraform output -json | python3 ansible/inventory/dynamic.py
 
     if [ "$?" -ne 0 ]; then
-        echo "hosts.py failed to generate inventory.yml file. Exiting..."
+        echo "dynamic.py failed to generate hosts.yml file. Exiting..."
         exit 1
     fi
 
@@ -44,7 +47,7 @@ run_up() {
         sleep 1
     done
 
-    ansible-playbook -i ansible/hosts.yml ansible/xui.yml
+    ansible-playbook -i ansible/inventory/hosts.yml ansible/xui.yml
 }
 
 run_down() {
