@@ -1,7 +1,7 @@
 server {
     listen 80;
     server_name {{ subdomain }}.{{ domain  }};
-    return 301 https://{{ subdomain }}.{{ domain  }}$request_uri;
+    return 301 https://{{ subdomain }}.{{ domain }}$request_uri;
 }
 
 server {
@@ -9,12 +9,13 @@ server {
     listen 443 quic reuseport;
 
     http2 on;
+    http3 on;
 
-    server_name {{ subdomain }}.{{ domain  }};
+    server_name {{ subdomain }}.{{ domain }};
 
     ssl_protocols TLSv1.3;
-    ssl_certificate /etc/letsencrypt/live/{{ subdomain }}.{{ domain  }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ subdomain }}.{{ domain  }}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/{{ subdomain }}.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ subdomain }}.{{ domain }}/privkey.pem;
 
     add_header Alt-Svc 'h3=":443"; ma=86400';
     add_header Cache-Control no-store;
