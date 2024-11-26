@@ -18,7 +18,8 @@ def create_inventory(terraform_data):
 
     ip = terraform_data["instance_public_ip"]["value"]
 
-    inventory["all"]["hosts"][ip] = {
+    inventory["all"]["hosts"]["vpn"] = {
+        "ansible_host": ip,
         "ansible_user": "root",
         "ansible_port": 22,
     }
@@ -26,13 +27,14 @@ def create_inventory(terraform_data):
     return inventory
 
 def write_inventory_to_file(inventory):
-    with open("ansible/hosts.yml", "w") as file:
+    with open("ansible/inventory/hosts.yml", "w") as file:
         yaml.dump(inventory, file, indent=2)
 
 def main():
     terraform_data = parse_input()
     inventory = create_inventory(terraform_data)
     write_inventory_to_file(inventory)
+    print("Inventory file 'hosts.yml' generated successfully")
 
 
 if __name__ == "__main__":
