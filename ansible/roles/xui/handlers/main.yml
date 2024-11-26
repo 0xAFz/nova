@@ -12,4 +12,3 @@
   systemd:
     name: x-ui
     state: restarted
-
