@@ -20,9 +20,8 @@ check_ping() {
     ansible all -i ansible/inventory/hosts.yml -m ping --timeout 1
 }
 
-run_up() {
+up() {
     terraform -chdir=terraform init && \
-    terraform -chdir=terraform plan && \
     terraform -chdir=terraform apply -auto-approve && \
     terraform -chdir=terraform output -json | python3 ansible/inventory/dynamic.py
 
@@ -32,7 +31,7 @@ run_up() {
     fi
 
     if [ -n "$DOMAIN" ]; then
-        python3 ansible/dns.py
+        python3 dns.py
 
         if [ "$?" -ne 0 ]; then
             echo "dns.py failed to create dns record. Exiting..."
@@ -50,17 +49,17 @@ run_up() {
     ansible-playbook -i ansible/inventory/hosts.yml ansible/xui.yml
 }
 
-run_down() {
+down() {
     terraform -chdir=terraform destroy -auto-approve
 }
 
 case "$1" in
     up)
         activate_venv
-        run_up
+        up
         ;;
     down)
-        run_down
+        down
         ;;
     *)
         echo "Action not found. Use 'up' or 'down'."
