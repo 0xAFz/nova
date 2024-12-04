@@ -11,14 +11,16 @@ def get_env(key):
         sys.exit(1)
     return value
 
+
 def load_env():
     return {
         "DOMAIN": get_env("DOMAIN"),
         "SUBDOMAIN": get_env("SUBDOMAIN"),
         "CLOUDFLARE_EMAIL": get_env("CLOUDFLARE_EMAIL"),
-        "CLOUDFLARE_API_TOKEN": get_env("CLOUDFLARE_API_TOKEN"),
+        "CLOUDFLARE_API_KEY": get_env("CLOUDFLARE_API_KEY"),
         "ZONE_ID": get_env("ZONE_ID"),
     }
+
 
 def load_inventory():
     if not os.path.exists("ansible/inventory/hosts.yml"):
@@ -30,8 +32,10 @@ def load_inventory():
 
     return inventory
 
+
 def get_dns_records_list():
     return cf.dns.records.list(zone_id=config["ZONE_ID"]).model_dump()
+
 
 def get_dns_record_dict(records):
     record_dict = {}
@@ -41,18 +45,27 @@ def get_dns_record_dict(records):
         record_dict[record["name"]].append(record)
     return record_dict
 
+
 def get_dns_record(name, records_dict):
     return records_dict.get(name, [])
 
+
 def create_dns_record(type, name, content, proxied):
-    return cf.dns.records.create(zone_id=config["ZONE_ID"], type=type, name=name, content=content, proxied=proxied)
+    return cf.dns.records.create(
+        zone_id=config["ZONE_ID"],
+        type=type,
+        name=name,
+        content=content,
+        proxied=proxied,
+    )
+
 
 def delete_dns_record(record):
     if isinstance(record, list):
         for r in record:
             cf.dns.records.delete(dns_record_id=r["id"], zone_id=config["ZONE_ID"])
             print(f"Deleted record: {r['name']} <{r['content']}>")
-        return True    
+        return True
     elif isinstance(record, dict):
         cf.dns.records.delete(dns_record_id=record["id"], zone_id=config["ZONE_ID"])
         print(f"Deleted record: {record['name']} <{record['content']}>")
@@ -61,17 +74,18 @@ def delete_dns_record(record):
         print("Invalid record format. Nothing to delete.")
     return False
 
+
 def main():
     inventory = load_inventory()
 
     ips = []
     try:
-        for host in inventory['all']['hosts']:
-            ips.append(inventory['all']['hosts'][host]['ansible_host'])
+        for host in inventory["all"]["hosts"]:
+            ips.append(inventory["all"]["hosts"][host]["ansible_host"])
     except Exception as e:
         print(e)
         sys.exit(1)
-        
+
     records = get_dns_records_list()
     records_dict = get_dns_record_dict(records)
 
@@ -79,18 +93,21 @@ def main():
 
     if record:
         delete_dns_record(record)
-        
+
     for ip in ips:
-        created = create_dns_record("A", f"{config['SUBDOMAIN']}.{config['DOMAIN']}", ip, True)
+        created = create_dns_record(
+            "A", f"{config['SUBDOMAIN']}.{config['DOMAIN']}", ip, True
+        )
         if created:
             print(f"New DNS record created: <{ip}>")
+
 
 if __name__ == "__main__":
     config = load_env()
 
     cf = Cloudflare(
-        api_token=config["CLOUDFLARE_API_TOKEN"],
-        api_email=config["CLOUDFLARE_EMAIL"],    
+        api_key=config["CLOUDFLARE_API_KEY"],
+        api_email=config["CLOUDFLARE_EMAIL"],
     )
 
     main()
