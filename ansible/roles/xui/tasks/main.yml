@@ -152,9 +152,10 @@
   notify:
     - restart x-ui
 
-- name: Apply routing settings
+- name: apply routing settings
   script: files/settings.sh
   args:
     executable: /bin/bash
   notify: 
     - restart x-ui
+
