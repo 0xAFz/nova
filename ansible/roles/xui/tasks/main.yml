@@ -1,68 +1,5 @@
 ---
-- name: install basic tools
-  apt:
-    update_cache: yes
-    name:
-      - curl
-      - wget
-      - vim
-      - htop
-    state: present
-
-- name: install web tools
-  apt:
-    update_cache: yes
-    name:
-      - curl 
-      - gnupg2 
-      - ca-certificates 
-      - lsb-release 
-      - debian-archive-keyring
-      - certbot
-      - python3-certbot-nginx
-      - sqlite3
-      - iptables-persistent
-    state: present
-  when: domain != '' and subdomain != ''
-
-- name: add nginx GPG key
-  shell: | 
-    curl -s https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-  when: domain != '' and subdomain != ''
-
-- name: add nginx official repository
-  shell: |
-    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/mainline/{{ ansible_facts['distribution'].lower() }} `lsb_release -cs` nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
-    printf "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 1000\n" | sudo tee /etc/apt/preferences.d/99nginx
-  when: domain != '' and subdomain != ''
-
-- name: install latest nginx
-  apt:
-    update_cache: yes
-    name: "nginx=1.27.2-1~bookworm"
-    state: present
-  when: domain != '' and subdomain != ''
-
-- name: ensure nginx is enabled and running
-  service:
-    name: nginx
-    state: started
-    enabled: yes
-  when: domain != '' and subdomain != ''
-
-- name: check installed nginx version
-  command:
-    cmd: nginx -v
-  register: nginx_version
-  ignore_errors: true
-  when: domain != '' and subdomain != ''
-
-- name: debug nginx version
-  debug:
-    msg: "Installed NGINX version: {{ nginx_version.stderr }}"
-  when: domain != '' and subdomain != ''
-
-- name: install x-ui
+- name: install 3x-ui panel
   shell: |
     if ! command -v x-ui &> /dev/null; then
       yes n | bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
@@ -70,66 +7,19 @@
   args:
     executable: /bin/bash
 
-- name: enable and start x-ui service
+- name: enable and start 3x-ui panel
   systemd:
     name: x-ui
     enabled: yes
     state: started
 
-- name: configure x-ui settings
+- name: configure 3x-ui panel
   shell: |
-    /usr/local/x-ui/x-ui setting -port {{ xui_port  }} -username {{ xui_username }} -password {{ xui_password }} -webBasePath / && /usr/local/x-ui/x-ui migrate
+    /usr/local/x-ui/x-ui setting -port {{ xui_port }} -username {{ xui_username }} -password {{ xui_password }} -webBasePath {{ xui_web_path  }} && /usr/local/x-ui/x-ui migrate
   args:
     executable: /bin/bash
-  vars:
-    xui_username: "{{ lookup('env', 'XUI_USERNAME') }}"
-    xui_password: "{{ lookup('env', 'XUI_PASSWORD') }}"
-    xui_port: "{{ lookup('env', 'XUI_PORT') }}"
-
-- name: restart x-ui service
-  systemd:
-    name: x-ui
-    state: restarted
-
-- name: deploy nginx conf
-  copy:
-    src: files/nginx.conf
-    dest: /etc/nginx/nginx.conf
-    owner: root
-    group: root
-    mode: '0644'
-  notify:
-    - restart nginx
-  when: domain != '' and subdomain != ''
-  tags: nginx
-
-- name: deploy nova nginx conf
-  template:
-    src: templates/nginx/nova.conf.j2
-    dest: /etc/nginx/conf.d/{{ subdomain }}.{{ domain  }}.conf
-    owner: root
-    group: root
-    mode: '0644'
-  notify:
-    - reload nginx
-  when: domain != '' and subdomain != ''
-  tags: nginx
-  
-- name: check if certs dir exists
-  stat:
-    path: /etc/letsencrypt/live/{{ subdomain }}.{{ domain }}/
-  register: certs_file
-  when: domain != '' and subdomain != ''
-
-- name: get certificates
-  shell: |
-    iptables -F
-    systemctl stop nginx
-    certbot certonly --standalone --preferred-challenges http -d {{ subdomain }}.{{ domain }} --non-interactive --agree-tos -m {{ email }}
-    systemctl start nginx
-    systemctl restart iptables
-  changed_when: false
-  when: not certs_file.stat.exists and domain != '' and subdomain != ''
+  notify: 
+    - restart x-ui
 
 - name: check if inbound already exists
   shell: |
@@ -137,18 +27,16 @@
   args:
     executable: /bin/bash
   register: inbound_check
-  when: domain != '' and subdomain != ''
 
 - name: add inbound if not already present
   script: files/inbound.sh
   args:
     executable: /bin/bash
-  when: domain != '' and subdomain != '' and inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
+  when: inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
   register: inbound_output
   changed_when: inbound_output.rc == 0
   environment:
     DOMAIN: "{{ domain }}"
-    SUBDOMAIN: "{{ subdomain  }}"
   notify:
     - restart x-ui
 
@@ -158,4 +46,3 @@
     executable: /bin/bash
   notify: 
     - restart x-ui
-

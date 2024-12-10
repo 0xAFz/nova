@@ -1,0 +1,8 @@
+---
+- name: common tasks for every playbooks
+  import_playbook: common.yml
+
+- hosts: all
+  become: true
+  roles:
+    - ../roles/nginx

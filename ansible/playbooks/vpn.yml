@@ -1,0 +1,7 @@
+---
+- name: install nginx
+  import_playbook: nginx.yml
+  when: is_domain_defined
+
+- name: install 3x-ui
+  import_playbook: xui.yml
