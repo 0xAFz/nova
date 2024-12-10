@@ -4,7 +4,9 @@ set -euo pipefail
 
 cd $(dirname "$0") || exit 1
 
-source ./.env
+set -o allexport
+source .env
+set +o allexport
 
 activate_venv() {
     if [ ! -d ".venv" ]; then
@@ -46,7 +48,7 @@ up() {
         sleep 1
     done
 
-    ansible-playbook -i ansible/inventory/hosts.yml ansible/xui.yml
+    ansible-playbook -i ansible/inventory/hosts.yml ansible/vpn.yml
 }
 
 down() {
