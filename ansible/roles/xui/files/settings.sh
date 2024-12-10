@@ -85,18 +85,10 @@ NEW_CONFIG='{
       }
     ]
   },
-  "stats": {},
-  "dns": {
-    "servers": [
-      "1.1.1.3",
-      "1.0.0.3",
-      "2606:4700:4700::1113",
-      "2606:4700:4700::1003"
-    ],
-    "queryStrategy": "UseIP"
-  }
+  "stats": {}
 }'
 
 sqlite3 $DB_FILE "UPDATE $CONFIG_TABLE SET value = '$NEW_CONFIG' WHERE key = 'xrayTemplateConfig';"
 
 echo "xrayTemplateConfig updated successfully."
+
