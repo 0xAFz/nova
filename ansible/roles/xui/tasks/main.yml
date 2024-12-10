@@ -151,3 +151,10 @@
     SUBDOMAIN: "{{ subdomain  }}"
   notify:
     - restart x-ui
+
+- name: Apply routing settings
+  script: files/settings.sh
+  args:
+    executable: /bin/bash
+  notify: 
+    - restart x-ui
