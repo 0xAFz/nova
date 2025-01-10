@@ -1,13 +1,4 @@
 ---
-- name: install web tools
-  apt:
-    update_cache: yes
-    name:
-      - debian-archive-keyring
-      - certbot
-      - python3-certbot-nginx
-    state: present
-
 - name: add nginx GPG key
   shell: | 
     curl -s https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
