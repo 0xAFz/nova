@@ -7,13 +7,14 @@ Nova automates the setup of a VPN server using Terraform, Ansible, Bash, and Pyt
 1. [Prerequisites](#prerequisites)
 2. [Setup Instructions](#setup-instructions)
 3. [Usage](#usage)
-4. [Environment Configuration](#environment-configuration)
+4. [Verify Installation](#verify-installation)
+5. [Environment Configuration](#environment-configuration)
    - [Populating the `.env` File](#populating-the-env-file)
-5. [Detailed Configuration Steps](#detailed-configuration-steps)
+6. [Detailed Configuration Steps](#detailed-configuration-steps)
    - [Cloudflare Credentials](#cloudflare-credentials)
    - [OpenStack Credentials](#openstack-credentials)
    - [SSH Key Pair Generation](#ssh-key-pair-generation)
-6. [Troubleshooting](#troubleshooting)
+7. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
@@ -74,8 +75,35 @@ Nova supports two main operations: `up` and `down`.
    ./nova.sh down
    ```
 
-## Environment Configuration
+## Verify Installation
+1. Check 3x-ui service status
+```bash
+systemctl status x-ui
+```
+2. Check Open ports
+```bash
+ss -ntlp
+```
+3. Open **3x-UI** panel in browser
 
+> [!WARNING]
+> For the security reasons, we blocked all public traffic to panel  
+
+### How to access the panel?
+You should open a `SSH` tunnel between local machine and server
+```bash
+# forwarding local port 8080 to server 127.0.0.1:2053
+ssh -L 8080:127.0.0.1:2053 user@ip
+```
+```bash
+# now you can open this url in your browser
+http://localhost:8080
+```
+> [!NOTE]
+> To be able to do SSH port forwarding, you must allow tcp forwarding `AllowTcpForwarding yes` in `/etc/ssh/sshd_config`  
+> By default we enabled it in the preparing tasks  
+
+## Environment Configuration
 ### Populating the `.env` File
 
 The `.env` file contains crucial environment variables needed for the project. You must update the placeholder values with your actual credentials and information.
