@@ -1,0 +1,14 @@
+---
+- name: Update and upgrade apt packages
+  apt:
+    update_cache: true
+    upgrade: false
+    cache_valid_time: 86400
+
+- name: Install basic tools
+  apt:
+    name: "{{ packages }}"
+    state: present
+    # force_apt_get: true
+    update_cache: true
+
