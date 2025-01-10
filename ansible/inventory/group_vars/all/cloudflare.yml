@@ -1,0 +1,8 @@
+---
+domain: "{{ lookup('env', 'DOMAIN') | default('')  }}"
+
+email: "{{ lookup('env', 'CLOUDFLARE_EMAIL') | default('')  }}"
+
+## don't edit this variable
+## it is used to check if the domain is defined
+is_domain_defined: "{{ domain is defined and domain != '' }}" 
