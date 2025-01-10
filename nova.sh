@@ -5,7 +5,7 @@ set -euo pipefail
 cd $(dirname "$0") || exit 1
 
 set -o allexport
-source .env
+source ./.env
 set +o allexport
 
 activate_venv() {
