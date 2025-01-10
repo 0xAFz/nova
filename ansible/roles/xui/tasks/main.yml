@@ -15,34 +15,27 @@
 
 - name: configure 3x-ui panel
   shell: |
-    /usr/local/x-ui/x-ui setting -port {{ xui_port }} -username {{ xui_username }} -password {{ xui_password }} -webBasePath {{ xui_web_path  }} && /usr/local/x-ui/x-ui migrate
+    /usr/local/x-ui/x-ui setting -listenIP {{ xui_listen }} -port {{ xui_port }} -username {{ xui_username }} -password {{ xui_password }} -webBasePath {{ xui_web_path }} && /usr/local/x-ui/x-ui migrate
   args:
     executable: /bin/bash
+
+- name: restart 3x-ui panel
+  systemd:
+    name: x-ui
+    state: restarted
+
+- name: generate Python script for inbounds
+  template:
+    src: inbounds.py.j2
+    dest: /tmp/inbounds.py
+  when: is_domain_defined
+
+- name: execute inbounds script
+  command: python3 /tmp/inbounds.py
   notify: 
     - restart x-ui
+  when: is_domain_defined
 
-- name: check if inbound already exists
-  shell: |
-    sqlite3 /etc/x-ui/x-ui.db "SELECT COUNT(*) FROM inbounds WHERE id = 1;"
-  args:
-    executable: /bin/bash
-  register: inbound_check
-
-- name: add inbound if not already present
-  script: files/inbound.sh
-  args:
-    executable: /bin/bash
-  when: inbound_check.stdout is defined and inbound_check.stdout | trim == "0" 
-  register: inbound_output
-  changed_when: inbound_output.rc == 0
-  environment:
-    DOMAIN: "{{ domain }}"
-  notify:
-    - restart x-ui
-
-- name: apply routing settings
-  script: files/settings.sh
-  args:
-    executable: /bin/bash
-  notify: 
-    - restart x-ui
+- name: clean up inbounds script
+  command: rm -rf /tmp/inbounds.py
+  when: is_domain_defined
