@@ -1,8 +1,8 @@
 ---
-- name: common tasks for every playbooks
-  import_playbook: common.yml
+- name: preparing tasks for every playbooks
+  import_playbook: preparing.yml
 
 - hosts: all
   become: true
   roles:
-    - ../roles/nginx
+    - { role: ../roles/nginx, tags: nginx,  when: is_domain_defined }
