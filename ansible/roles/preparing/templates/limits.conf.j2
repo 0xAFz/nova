@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+
+* hard maxlogins 10
+* hard core 0
+* soft nproc {{ limit_nproc_soft }}
+* hard nproc {{ limit_nproc_hard }}
+* soft nofile {{ limit_file_soft }}
+* hard nofile {{ limit_file_hard }}
+
