@@ -1,9 +1,6 @@
 ---
 - name: install 3x-ui panel
-  shell: |
-    if ! command -v x-ui &> /dev/null; then
-      yes n | bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
-    fi
+  shell: which x-ui || yes n | bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
   args:
     executable: /bin/bash
 
