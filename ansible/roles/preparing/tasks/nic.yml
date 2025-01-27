@@ -1,0 +1,17 @@
+---
+- name: Add the sch_cake module
+  community.general.modprobe:
+    name: sch_cake
+    state: present
+
+- name: Apply CAKE qdisc to {{ ansible_default_ipv4.interface }}
+  command: "tc qdisc replace dev {{ ansible_default_ipv4.interface }} root cake diffserv4 bandwidth {{ bandwidth }} rtt {{ rtt }}"
+
+- name: Configure TSO for {{ ansible_default_ipv4.interface }}
+  command: ethtool -K {{ ansible_default_ipv4.interface }} tso {{ 'on' if tso else 'off' }}
+
+- name: Configure GSO for {{ ansible_default_ipv4.interface }}
+  command: ethtool -K {{ ansible_default_ipv4.interface }} gso {{ 'on' if gso else 'off' }}
+
+- name: Configure GRO for {{ ansible_default_ipv4.interface }}
+  command: ethtool -K {{ ansible_default_ipv4.interface }} gro {{ 'on' if gro else 'off' }}

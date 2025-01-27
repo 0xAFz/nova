@@ -5,12 +5,7 @@ packages:
 - vim
 - bash-completion
 - curl
-- htop
-- iftop
 - ca-certificates
-- sqlite3
-- jq
-- ncdu
 - unzip
 - net-tools
 - dnsutils
@@ -18,18 +13,13 @@ packages:
 #- ntp
 - fail2ban
 - software-properties-common
-- apache2-utils
 - tcpdump
-- telnet
-- axel
 - iptables-persistent
+- nftables
 - auditd
 - libpwquality-common
 - cracklib-runtime
-- python3-requests
-- debian-archive-keyring
-- certbot
-- python3-certbot-nginx
+- ethtool
 
 # sshd configuration
 sshd_config:
@@ -40,17 +30,24 @@ sshd_config:
   AllowUsers: root
   AllowGroups: root
 
-# iptables configuration
-iptables:
+# firewall system: nftables or iptables
+firewall: nftables
+
+# firewall configuration
+firewall_config:
   network_adapter_access:
     - lo
   tcp_port_access:
     - 80
     - 443
-    - 2086
     - 2087
   #udp_port_access:
   #trusted_range:
+
+
+# packet DSCP configuration
+# https://en.wikipedia.org/wiki/Differentiated_services
+dscp: true
 
 # fail2ban configuration
 fail2ban:
@@ -94,7 +91,25 @@ limit_nofile_soft: 1000000
 limit_nproc_hard: 10000
 limit_nproc_soft: 10000
 
-# sysctll configuration variables
+# traffic control variables
+# cake
+# mbit, gbit, unlimited
+bandwidth: 1gbit
+rtt: 100ms
+
+# network interface card configuration
+# resources for more information:
+# https://www.kernel.org/doc/Documentation/networking/segmentation-offloads.txt
+# https://en.wikipedia.org/wiki/TCP_offload_engine
+# the variables below can be set to true/false:
+#  - true: enable the feature
+#  - false: disable the feature
+# control whether the network card should offload segmentation or reception tasks.
+tso: true   # TCP Segmentation Offload
+gso: true   # Generic Segmentation Offload
+gro: true   # Generic Receive Offload
+
+# sysctl configuration variables
 sysctl_config:
   net.core.somaxconn: 8192
   net.ipv4.tcp_fin_timeout: 10
@@ -121,8 +136,8 @@ sysctl_config:
   net.ipv4.udp_wmem_min: 8192
   net.ipv4.udp_l3mdev_accept: 1
   net.ipv4.ip_default_ttl: 64
-  net.core.default_qdisc: fq
-  net.ipv4.tcp_congestion_control: bbr
+  net.core.default_qdisc: cake
+  net.ipv4.tcp_congestion_control: cubic
   net.ipv4.icmp_echo_ignore_all: 0
   net.ipv4.ip_forward: 1
   net.ipv4.conf.all.forwarding: 1
