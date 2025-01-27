@@ -1,38 +1,38 @@
 ---
-- name: install 3x-ui panel
+- name: Install 3x-UI panel
   shell: which x-ui || yes n | bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
   args:
     executable: /bin/bash
 
-- name: enable and start 3x-ui panel
+- name: Enable and start 3x-UI panel
   systemd:
     name: x-ui
     enabled: yes
     state: started
 
-- name: configure 3x-ui panel
+- name: Configure 3x-UI panel
   shell: |
     /usr/local/x-ui/x-ui setting -listenIP {{ xui_listen }} -port {{ xui_port }} -username {{ xui_username }} -password {{ xui_password }} -webBasePath {{ xui_web_path }} && /usr/local/x-ui/x-ui migrate
   args:
     executable: /bin/bash
 
-- name: restart 3x-ui panel
+- name: Restart 3x-UI service
   systemd:
     name: x-ui
     state: restarted
 
-- name: generate Python script for inbounds
+- name: Generate Python script for inbounds
   template:
     src: inbounds.py.j2
     dest: /tmp/inbounds.py
   when: is_domain_defined
 
-- name: execute inbounds script
+- name: Execute inbounds script
   command: python3 /tmp/inbounds.py
   notify: 
     - restart x-ui
   when: is_domain_defined
 
-- name: clean up inbounds script
+- name: Clean up inbounds script
   command: rm -rf /tmp/inbounds.py
   when: is_domain_defined
