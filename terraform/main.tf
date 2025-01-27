@@ -17,10 +17,6 @@ resource "openstack_compute_instance_v2" "nova" {
 
   user_data = <<-EOF
               #!/bin/bash
-              echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-              echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-              sysctl -p
+              echo "Managed by NOVA"
               EOF
-
 }
-
