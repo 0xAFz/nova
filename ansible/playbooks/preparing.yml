@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Hardening the system and apply optimizations
+  hosts: all
   become: true
   roles:
     - { role: ../roles/preparing, tags: preparing }

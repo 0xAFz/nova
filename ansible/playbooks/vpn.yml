@@ -1,14 +1,14 @@
 ---
-- name: preparing tasks for every playbooks
+- name: Preparing tasks for every playbooks
   import_playbook: preparing.yml
 
-- name: install nginx
+- name: Install NGINX
   hosts: all
   become: true
   roles:
     - { role: ../roles/nginx, tags: nginx, when: is_domain_defined }
 
-- name: install 3x-ui
+- name: Install 3x-UI
   hosts: all
   become: true
   roles:

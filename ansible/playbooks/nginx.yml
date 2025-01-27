@@ -1,8 +1,9 @@
 ---
-- name: preparing tasks for every playbooks
+- name: Preparing tasks for every playbooks
   import_playbook: preparing.yml
 
-- hosts: all
+- name: Install NGINX
+  hosts: all
   become: true
   roles:
     - { role: ../roles/nginx, tags: nginx,  when: is_domain_defined }
