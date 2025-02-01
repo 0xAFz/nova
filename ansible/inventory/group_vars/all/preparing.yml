@@ -91,27 +91,24 @@ limit_nofile_soft: 1000000
 limit_nproc_hard: 10000
 limit_nproc_soft: 10000
 
-# traffic control variables
-# cake
-# mbit, gbit, unlimited
+## traffic control variables
+## CAKE
+## mbit, gbit, unlimited
 bandwidth: 1gbit
-rtt: 100ms
+rtt: 1ms
 
-# network interface card configuration
-# resources for more information:
-# https://www.kernel.org/doc/Documentation/networking/segmentation-offloads.txt
-# https://en.wikipedia.org/wiki/TCP_offload_engine
-# the variables below can be set to true/false:
-#  - true: enable the feature
-#  - false: disable the feature
-# control whether the network card should offload segmentation or reception tasks.
+## network interface card configuration
+##
+## https://www.kernel.org/doc/Documentation/networking/segmentation-offloads.txt
+## https://en.wikipedia.org/wiki/TCP_offload_engine
+##
 tso: true   # TCP Segmentation Offload
 gso: true   # Generic Segmentation Offload
 gro: true   # Generic Receive Offload
 
-# sysctl configuration variables
+## sysctl configuration variables
 sysctl_config:
-  net.core.somaxconn: 8192
+  net.core.somaxconn: 65535
   net.ipv4.tcp_fin_timeout: 10
   net.ipv4.tcp_keepalive_time: 120
   net.ipv4.tcp_ecn: 1
@@ -120,7 +117,12 @@ sysctl_config:
   net.ipv4.tcp_sack: 1
   net.ipv4.tcp_window_scaling: 1
   net.ipv4.tcp_mtu_probing: 1
-  net.ipv4.tcp_max_syn_backlog: 1024
+  net.ipv4.tcp_slow_start_after_idle: 0
+  net.ipv4.tcp_max_tw_buckets: 80000
+  net.ipv4.tcp_timestamps: 1
+  net.ipv4.tcp_syncookies: 1
+  net.ipv4.tcp_tw_reuse: 1
+  net.ipv4.tcp_max_syn_backlog: 8192
   net.ipv4.tcp_rmem: "8192 87380 16777216"
   net.ipv4.tcp_wmem: "8192 65536 16777216"
   net.ipv4.tcp_low_latency: 1
@@ -144,11 +146,9 @@ sysctl_config:
   net.ipv6.conf.all.forwarding: 1
   vm.max_map_count: 262144
   fs.file-max: 1500000
-  net.ipv4.tcp_tw_reuse: 1
   net.netfilter.nf_conntrack_tcp_timeout_established: 900
   net.netfilter.nf_conntrack_tcp_timeout_close_wait: 10
   net.netfilter.nf_conntrack_tcp_timeout_syn_recv: 30
   net.netfilter.nf_conntrack_max: 262144
-  net.ipv4.tcp_syncookies: 1
   net.ipv4.conf.default.rp_filter: 1
   net.ipv4.conf.all.rp_filter: 1
