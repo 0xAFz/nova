@@ -29,10 +29,14 @@
 
 - name: Execute inbounds script
   command: python3 /tmp/inbounds.py
-  notify: 
-    - restart x-ui
   when: is_domain_defined
 
 - name: Clean up inbounds script
   command: rm -rf /tmp/inbounds.py
   when: is_domain_defined
+ 
+- name: Restart 3x-UI service
+  systemd:
+    name: x-ui
+    state: restarted
+
