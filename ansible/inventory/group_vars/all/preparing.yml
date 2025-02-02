@@ -86,6 +86,10 @@ limit_nofile_soft: 1000000
 limit_nproc_hard: 10000
 limit_nproc_soft: 10000
 
+## packet DSCP configuration
+## https://en.wikipedia.org/wiki/Differentiated_services
+dscp: true
+
 ## traffic control variables
 ## CAKE
 ## mbit, gbit, unlimited
