@@ -1,5 +1,5 @@
 ---
-- name: Create Nomad directory
+- name: Create Nova directory
   file:
     path: "{{ config_dir }}"
     state: directory
