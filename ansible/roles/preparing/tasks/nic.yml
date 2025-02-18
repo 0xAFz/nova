@@ -1,17 +1,32 @@
 ---
-- name: Add the sch_cake module
-  community.general.modprobe:
-    name: sch_cake
-    state: present
+- name: Create Nomad directory
+  file:
+    path: "{{ config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
-- name: Apply CAKE qdisc to {{ ansible_default_ipv4.interface }}
-  command: "tc qdisc replace dev {{ ansible_default_ipv4.interface }} root cake diffserv4 bandwidth {{ bandwidth }} rtt {{ rtt }}"
+- name: Make NIC configuration script
+  template:
+    src: nic.sh.j2
+    dest: "{{ config_dir }}/nic.sh"
+    mode: 0744
+    owner: root
+    group: root
 
-- name: Configure TSO for {{ ansible_default_ipv4.interface }}
-  command: ethtool -K {{ ansible_default_ipv4.interface }} tso {{ 'on' if tso else 'off' }}
+- name: Make NIC configuration systemd service
+  template:
+    src: nic.service.j2
+    dest: /etc/systemd/system/nic-setup.service
+    mode: 0644
+    owner: root
+    group: root
 
-- name: Configure GSO for {{ ansible_default_ipv4.interface }}
-  command: ethtool -K {{ ansible_default_ipv4.interface }} gso {{ 'on' if gso else 'off' }}
-
-- name: Configure GRO for {{ ansible_default_ipv4.interface }}
-  command: ethtool -K {{ ansible_default_ipv4.interface }} gro {{ 'on' if gro else 'off' }}
+- name: Enable and start NIC configuration service
+  systemd:
+    name: nic-setup
+    enabled: true
+    state: started
+    daemon_reload: true
+  ignore_errors: true
