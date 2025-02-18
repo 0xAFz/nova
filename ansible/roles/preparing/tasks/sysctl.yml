@@ -1,21 +1,7 @@
 ---
-- name: Add the br_netfilter module
-  community.general.modprobe:
-    name: br_netfilter
-    state: present
-
-- name: Add the tcp_bbr module
-  community.general.modprobe:
-    name: tcp_bbr
-    state: present
-
-- name: Change various sysctl-settings
-  sysctl:
-    name: "{{ item.key }}"
-    state: present
-    value: "{{ item.value }}"
-    sysctl_file: /etc/sysctl.d/99-sysctl.conf
-    reload: true
-    ignoreerrors: true
-  with_dict: "{{ sysctl_config }}"
-
+- name: Apply sysctl settings
+  template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.conf
+  notify:
+    - Reload sysctl
