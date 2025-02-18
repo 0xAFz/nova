@@ -1,68 +1,46 @@
 ---
-- name: Configure systemd journald.conf
-  become: true
-  template:
-    src: journald.conf.j2
-    dest: /etc/systemd/journald.conf
-    backup: true
-    mode: 0644
-    owner: root
-    group: root
-  notify:
-    - Reload systemd
-
-- name: Configure logrotate.conf
-  become: true
-  template:
-    src: logrotate.conf.j2
-    dest: /etc/logrotate.conf
-    backup: true
-    mode: 0644
-    owner: root
-    group: root
-
-- name: Set cron.daily logrotate
-  become: true
+- name: Disable systemd-journald logging
   lineinfile:
-    line: "/usr/sbin/logrotate /etc/logrotate.conf"
-    dest: /etc/cron.daily/logrotate
-    mode: 0750
+    path: /etc/systemd/journald.conf
+    regexp: '^#Storage='
+    line: 'Storage=none'
     state: present
-    create: true
+  ignore_errors: true
 
-- name: Stat rsyslog.conf
-  become: true
-  stat:
-    path: /etc/rsyslog.conf
-  register: rsyslogconf
+- name: Disable systemd-journald service
+  systemd:
+    name: systemd-journald
+    masked: true
+    enabled: false
+    state: stopped
+  ignore_errors: true
 
-- name: Get rsyslog.conf FileCreateMode
-  become: true
-  environment:
-    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-  shell: grep "^$FileCreateMode" /etc/rsyslog.conf
-  register: rsyslog_filecreatemode
-  changed_when: false
-  when: rsyslogconf.stat.exists
+- name: Disable rsyslog service
+  systemd:
+    name: rsyslog
+    state: stopped
+    masked: true
+    enabled: false
+  ignore_errors: true
 
-- name: Set rsyslog.conf FileCreateMode
-  become: true
-  lineinfile:
-    regexp: '^\$FileCreateMode'
-    line: '$FileCreateMode 0600'
-    dest: /etc/rsyslog.conf
-    mode: 0640
-    state: present
-    create: no
-  when: rsyslogconf.stat.exists and rsyslog_filecreatemode.stdout.find('FileCreateMode') != -1
+- name: Disable logrotate service
+  systemd:
+    name: logrotate
+    state: stopped
+    masked: true
+    enabled: false
+  ignore_errors: true
 
-- name: Set rsyslog.d FileCreateMode
-  become: true
-  lineinfile:
-    regexp: '^\$FileCreateMode'
-    line: '$FileCreateMode 0600'
-    dest: /etc/rsyslog.d/99-filecreatemode.conf
-    mode: 0644
-    state: present
-    create: true
+- name: Disable auditd service
+  systemd:
+    name: auditd
+    state: stopped
+    masked: true
+    enabled: false
+  ignore_errors: true
 
+- name: Remove cron daily logrotate
+  file:
+    path: /etc/cron.daily/logrotate
+    state: absent
+  ignore_errors: true
