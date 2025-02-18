@@ -1,5 +1,5 @@
 ---
-- name: Hardening the system and apply optimizations
+- name: Apply optimizations and hardening
   hosts: all
   become: true
   roles:
