@@ -1,24 +1,34 @@
 #!/bin/bash
 
-tc qdisc replace dev {{ ansible_default_ipv4.interface }} root fq_codel target {{ fq_codel_target }} interval {{ fq_codel_interval }} noecn limit {{ fq_codel_limit }} flows {{ fq_codel_flows }} quantum {{ fq_codel_quantum }}
+{% if qdisc == 'fq' %}
+tc qdisc replace dev {{ ansible_default_ipv4.interface }} root {{ _fq }}
+{% elif qdisc == 'fq_codel' %}
+tc qdisc replace dev {{ ansible_default_ipv4.interface }} root {{ _fq_codel }}
+{% elif qdisc == 'pfifo' %}
+tc qdisc replace dev {{ ansible_default_ipv4.interface }} root {{ _pfifo }}
+{% else %}
+tc qdisc replace dev {{ ansible_default_ipv4.interface }} root noqueue
+{% endif %}
 
-ethtool -K {{ ansible_default_ipv4.interface }} tso {{ 'on' if tso else 'off' }}
-ethtool -K {{ ansible_default_ipv4.interface }} gso {{ 'on' if gso else 'off' }}
-ethtool -K {{ ansible_default_ipv4.interface }} gro {{ 'on' if gro else 'off' }}
+ethtool -K {{ ansible_default_ipv4.interface }} tso {{ tso }}
+ethtool -K {{ ansible_default_ipv4.interface }} gso {{ gso }}
+ethtool -K {{ ansible_default_ipv4.interface }} gro {{ gro }}
+ethtool -K {{ ansible_default_ipv4.interface }} lro {{ lro }}
 ethtool -C {{ ansible_default_ipv4.interface }} rx-usecs {{ rx_usecs }} tx-usecs {{ tx_usecs }}
-ethtool -K {{ ansible_default_ipv4.interface }} tx off rx off
+ethtool -C {{ ansible_default_ipv4.interface }} rx-frames {{ rx_frames }} tx-frames {{ tx_frames }}
+ethtool -C {{ ansible_default_ipv4.interface }} adaptive-rx {{ adaptive_rx }} adaptive-tx {{ adaptive_tx }}
+ethtool -A {{ ansible_default_ipv4.interface }} autoneg {{ autoneg }}
+ethtool -A {{ ansible_default_ipv4.interface }} rx {{ rx }} tx {{ tx }}
 
 {% if dscp %}
 tc filter del dev {{ ansible_default_ipv4.interface }}
 tc qdisc del dev {{ ansible_default_ipv4.interface }} clsact
 tc qdisc add dev {{ ansible_default_ipv4.interface }} clsact
-
 {% if firewall_config.tcp_port_access is defined %}
 {% for port in firewall_config.tcp_port_access %}
 tc filter add dev {{ ansible_default_ipv4.interface }} egress protocol ip prio 1 u32 match ip sport {{ port }} 0xffff action pedit munge ip tos set 0x28 pipe action csum iph
 {% endfor %}
 {% endif %}
-
 {% if firewall_config.udp_port_access is defined %}
 {% for port in firewall_config.udp_port_access %}
 tc filter add dev {{ ansible_default_ipv4.interface }} egress protocol ip prio 1 u32 match ip sport {{ port }} 0xffff action pedit munge ip tos set 0x80 pipe action csum iph
@@ -26,5 +36,18 @@ tc filter add dev {{ ansible_default_ipv4.interface }} egress protocol ip prio 1
 {% endif %}
 {% endif %}
 
-echo {{ sysctl_config.get('net.core.busy_poll', '100') }} > /sys/class/net/{{ ansible_default_ipv4.interface }}/napi_defer_hard_irqs
+echo {{ napi_defer_hard_irqs }} > /sys/class/net/{{ ansible_default_ipv4.interface }}/napi_defer_hard_irqs
+echo {{ gro_flush_timeout }} > /sys/class/net/{{ ansible_default_ipv4.interface }}/gro_flush_timeout
+echo {{ threaded_napi }} > /sys/class/net/{{ ansible_default_ipv4.interface }}/threaded
 
+for pid in $(ps -e | grep ksoftirqd | awk '{print \$1}'); do chrt -r -p 99 \$pid; done
+
+{% if ansible_processor_vcpus | int > 2 %}
+echo "fe" > /sys/class/net/{{ ansible_default_ipv4.interface }}/queues/rx-*/rps_cpus
+VCPU_COUNT=$(nproc)
+QUEUE_COUNT=$(ls /sys/class/net/{{ ansible_default_ipv4.interface }}/queues/ | grep -c rx-)
+FLOW_ENTRIES=$(( $VCPU_COUNT * 1024 ))
+FLOW_PER_QUEUE=$(( $FLOW_ENTRIES / $QUEUE_COUNT ))
+sysctl -w net.core.rps_sock_flow_entries="$FLOW_ENTRIES"
+echo "$FLOW_PER_QUEUE" > /sys/class/net/{{ ansible_default_ipv4.interface }}/queues/rx-*/rps_flow_cnt
+{% endif %}

@@ -49,20 +49,11 @@ firewall_config:
 ## https://en.wikipedia.org/wiki/Differentiated_services
 dscp: true
 
-## session timeout setting (seconds)
-timeout_time: 600
-
 ## resolv.conf name servers
-dns_v4: 1.1.1.3
-dns_v4_fallback: 1.0.0.3
+dns: 1.1.1.3
+dns_fallback: 1.0.0.3
 dns_v6: 2606:4700:4700::1113
 dns_v6_fallback: 2606:4700:4700::1003
-
-## DNS variables for systemd-resolved
-dns: 1.1.1.3
-fallback_dns: 1.0.0.3
-dnssec: allow-downgrade
-dns_over_tls: opportunistic
 
 ## limit.conf variables
 limit_nofile_hard: 1000000
@@ -71,84 +62,113 @@ limit_nproc_hard: 10000
 limit_nproc_soft: 10000
 
 ## qdisc configuration
-fq_codel_target: 500us
-fq_codel_interval: 10ms
-fq_codel_limit: 1024
-fq_codel_flows: 1024
-fq_codel_quantum: 256
+_fq_codel: "fq_codel target 50us interval 500us noecn limit 100000 flows 1024 quantum 1514"
+_pfifo: "pfifo limit 100000"
+_fq: "fq quantum 1514 initial_quantum 15140 flow_limit 100000 limit 100000 buckets 8192"
+
+## supported qdisc: noqueue, fq_codel, pfifo, fq
+qdisc: fq
 
 ## NIC configuration
 ##
 ## https://www.kernel.org/doc/Documentation/networking/segmentation-offloads.txt
 ## https://en.wikipedia.org/wiki/TCP_offload_engine
 ##
-tso: false   # TCP Segmentation Offload
-gso: false   # Generic Segmentation Offload
-gro: false   # Generic Receive Offload
+tso: "on"   # TCP Segmentation Offload
+gso: "on"   # Generic Segmentation Offload
+gro: "on"   # Generic Receive Offload
+lro: "off"   # Large Receive Offload
 
-## RX/TX queue polling interval
+## Ethernet flow control
+## https://en.wikipedia.org/wiki/Ethernet_flow_control
+autoneg: "off"
+rx: "off"
+tx: "off"
+
+## Adaptive RX/TX
+adaptive_rx: "on"
+adaptive_tx: "on"
+
+## RX/TX polling interval
 rx_usecs: 0
 tx_usecs: 0
 
+## RX/TX queue length
+rx_frames: 1
+tx_frames: 1
+
+## NAPI
+napi_defer_hard_irqs: 1
+gro_flush_timeout: 1
+threaded_napi: 1
+
 ## sysctl configuration variables
 sysctl_config:
-  net.core.busy_read: 100
-  net.core.busy_poll: 100
-  net.core.dev_weight: 256
-  net.core.dev_weight_rx_bias: 64
-  net.core.dev_weight_tx_bias: 64
-  net.core.somaxconn: 512
+  net.core.default_qdisc: fq
+  net.core.somaxconn: 4096
+  net.core.netdev_max_backlog: 50000
+  net.unix.max_dgram_qlen: 4096
+  net.core.busy_read: 5000
+  net.core.busy_poll: 5000
+  net.core.netdev_budget: 600
+  net.core.netdev_budget_usecs: 400
+  net.core.dev_weight: 64
+  net.core.dev_weight_rx_bias: 1
+  net.core.dev_weight_tx_bias: 1
+  net.core.flow_limit_table_len: 4096
+  net.core.flow_limit_cpu_bitmap: 0
+  net.core.netdev_tstamp_prequeue: 0
+  net.core.rmem_default: 1048576
+  net.core.wmem_default: 1048576
+  net.core.rmem_max: 16777216
+  net.core.wmem_max: 16777216
+  net.core.optmem_max: 65536
   net.ipv4.tcp_no_metrics_save: 1
-  net.ipv4.tcp_fin_timeout: 10
+  net.ipv4.tcp_fin_timeout: 1
   net.ipv4.tcp_keepalive_time: 120
-  net.ipv4.tcp_ecn: 0
-  net.ipv4.tcp_sack: 0
-  net.ipv4.tcp_mtu_probing: 0
-  net.ipv4.tcp_timestamps: 0
+  net.ipv4.tcp_ecn: 1
+  net.ipv4.tcp_sack: 1
+  net.ipv4.tcp_mtu_probing: 1
+  net.ipv4.tcp_timestamps: 1
   net.ipv4.tcp_keepalive_intvl: 20
   net.ipv4.tcp_keepalive_probes: 3
-  net.ipv4.tcp_max_orphans: 2048
+  net.ipv4.tcp_max_orphans: 524288
   net.ipv4.tcp_retries2: 3
   net.ipv4.tcp_synack_retries: 2
   net.ipv4.tcp_window_scaling: 1
-  net.ipv4.tcp_slow_start_after_idle: 1
-  net.ipv4.tcp_max_tw_buckets: 2048
+  net.ipv4.tcp_slow_start_after_idle: 0
+  net.ipv4.tcp_max_tw_buckets: 262144
   net.ipv4.tcp_syncookies: 1
   net.ipv4.tcp_tw_reuse: 1
-  net.ipv4.tcp_max_syn_backlog: 128
-  net.ipv4.tcp_rmem: "4096 87380 262144"
-  net.ipv4.tcp_wmem: "4096 16384 262144"
-  net.ipv4.tcp_low_latency: 1
+  net.ipv4.tcp_max_syn_backlog: 4096
+  net.ipv4.tcp_rmem: "4096 87380 16777216"
+  net.ipv4.tcp_wmem: "4096 16384 16777216"
+  net.ipv4.tcp_limit_output_bytes: 131072
+  net.ipv4.tcp_low_latency: 0
   net.ipv4.tcp_fastopen: 3
-  net.core.rmem_default: 65536
-  net.core.wmem_default: 65536
-  net.core.rmem_max: 262144
-  net.core.wmem_max: 262144
-  net.core.optmem_max: 32768
-  net.core.netdev_max_backlog: 1024
-  net.unix.max_dgram_qlen: 512
-  net.ipv4.udp_rmem_min: 16384
-  net.ipv4.udp_wmem_min: 16384
+  net.ipv4.tcp_congestion_control: bbr
+  net.ipv4.udp_rmem_min: 1048576
+  net.ipv4.udp_wmem_min: 1048576
   net.ipv4.udp_l3mdev_accept: 1
   net.ipv4.ip_default_ttl: 64
-  net.core.default_qdisc: fq_codel
-  net.ipv4.tcp_congestion_control: cubic
-  net.ipv4.icmp_echo_ignore_all: 0
+  net.ipv4.ip_early_demux: 1
   net.ipv4.ip_forward: 1
   net.ipv4.conf.all.forwarding: 1
   net.ipv6.conf.all.forwarding: 1
-  vm.max_map_count: 262144
-  vm.swappiness: 0
-  vm.compaction_proactiveness: 0
-  vm.dirty_ratio: 5
-  vm.dirty_background_ratio: 5
-  fs.file-max: 1500000
   net.ipv4.conf.default.rp_filter: 0
   net.ipv4.conf.all.rp_filter: 0
-  net.bridge.bridge-nf-call-iptables: 0
-  net.bridge.bridge-nf-call-ip6tables: 0
-  kernel.printk: "3 4 1 3"
-  net.netfilter.nf_conntrack_max: 262144
-  net.netfilter.nf_conntrack_tcp_timeout_established: 900
-  net.netfilter.nf_conntrack_tcp_timeout_close_wait: 10
-  net.netfilter.nf_conntrack_tcp_timeout_syn_recv: 30
+  net.ipv4.icmp_echo_ignore_all: 1
+  fs.file-max: 2097152
+  vm.max_map_count: 262144
+  vm.swappiness: 0
+  vm.dirty_ratio: 5
+  vm.dirty_background_ratio: 5
+  vm.compaction_proactiveness: 0
+  kernel.printk: "0 4 1 3"
+  kernel.randomize_va_space: 0
+  kernel.numa_balancing: 0
+  kernel.watchdog_thresh: 30
+  kernel.sched_rt_period_us: 1000000
+  kernel.sched_rt_runtime_us: 950000
+  kernel.perf_event_max_sample_rate: 100
+  kernel.core_pattern: "/dev/null"
