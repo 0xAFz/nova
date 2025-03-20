@@ -6,10 +6,10 @@
   hosts: all
   become: true
   roles:
-    - { role: ../roles/nginx, tags: nginx, when: is_domain_defined }
+    - { role: ../roles/nginx, tags: nginx, when: enable_nginx and is_domain_defined }
 
 - name: Install 3x-UI
   hosts: all
   become: true
   roles:
-    - { role: ../roles/xui, tags: xui }
+    - { role: ../roles/xui, tags: xui, when: enable_xui }
