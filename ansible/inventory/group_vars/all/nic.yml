@@ -1,0 +1,33 @@
+---
+## NIC configuration
+##
+## https://www.kernel.org/doc/Documentation/networking/segmentation-offloads.txt
+## https://en.wikipedia.org/wiki/TCP_offload_engine
+##
+tso: "on"   # TCP Segmentation Offload
+gso: "on"   # Generic Segmentation Offload
+gro: "on"   # Generic Receive Offload
+lro: "off"   # Large Receive Offload
+
+## Ethernet flow control
+## https://en.wikipedia.org/wiki/Ethernet_flow_control
+autoneg: "on"
+rx: "on"
+tx: "on"
+
+## Adaptive RX/TX
+adaptive_rx: "on"
+adaptive_tx: "on"
+
+## RX/TX polling interval
+rx_usecs: 256
+tx_usecs: 0
+
+## RX/TX queue length
+rx_frames: 16
+tx_frames: 1
+
+## NAPI
+napi_defer_hard_irqs: 1
+gro_flush_timeout: 1
+threaded_napi: 1

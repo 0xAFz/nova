@@ -1,0 +1,18 @@
+---
+## supported: nftables, none
+firewall: nftables
+
+## firewall configuration
+firewall_config:
+  network_adapter_access:
+    - lo
+  tcp_port_access:
+    - 80
+    - 443
+    - 2087
+    - 8080
+  # udp_port_access:
+  #   - 8082
+  #   - 8084
+  # trusted_range:
+  #   - 1.1.1.1/24

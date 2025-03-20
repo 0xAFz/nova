@@ -1,0 +1,14 @@
+---
+## Nova configuration directory
+config_dir: /opt/nomad
+
+##
+## Define which services should run on your servers.
+## Set `true` to enable a service or `false` to disable it.
+##
+
+## Set to true to install the 3x-UI
+enable_xui: false
+
+## Set to true to install and setup NGINX
+enable_nginx: false
