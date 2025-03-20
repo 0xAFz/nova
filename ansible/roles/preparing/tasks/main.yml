@@ -38,11 +38,6 @@
   tags: nftables
   when: firewall == 'nftables'
 
-- name: Configure iptables
-  import_tasks: iptables.yml
-  tags: iptables
-  when: firewall == 'iptables'
-
 - name: Disable and stop unnecessary services
   import_tasks: services.yml
   tags: services
@@ -51,6 +46,11 @@
   import_tasks: sysctl.yml
   tags: sysctl
 
-- name: Configure Kernel
+- name: Samurai kernel
+  import_tasks: samurai.yml
+  tags: samurai
+  when: samurai
+
+- name: Configure kernel
   import_tasks: kernel.yml
   tags: kernel
