@@ -13,12 +13,12 @@ packages:
 ## samurai kernel (amd64)
 ## not stable for all platforms!!!
 samurai: false
-samurai_version: 0.3.2
+samurai_version: 0.3.3
 samurai_kernel_version: 6.1.132
 
 ## monitoring (prometheus node exporter)
 monitoring: false
-node_exporter_listen_address: ":10100"
+node_exporter_listen_address: ":9100"
 
 ## sshd configuration
 sshd_config:
@@ -34,6 +34,9 @@ dns: 1.1.1.3
 dns_fallback: 1.0.0.3
 dns_v6: 2606:4700:4700::1113
 dns_v6_fallback: 2606:4700:4700::1003
+
+## enable IPv6 name servers
+enable_ipv6_dns: false
 
 ## limits
 limit_nofile_hard: 1000000
