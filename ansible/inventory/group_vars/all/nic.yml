@@ -4,10 +4,22 @@
 ## https://www.kernel.org/doc/Documentation/networking/segmentation-offloads.txt
 ## https://en.wikipedia.org/wiki/TCP_offload_engine
 ##
-tso: "on"   # TCP Segmentation Offload
-gso: "on"   # Generic Segmentation Offload
-gro: "on"   # Generic Receive Offload
-lro: "off"   # Large Receive Offload
+tso: "on"
+gso: "on"
+gro: "on"
+lro: "on"
+highdma: "on"
+rx_gro_hw: "on"
+rx_gro_list: "on"
+tx_gso_robust: "on"
+rx_checksumming: "on"
+tx_checksumming: "on"
+tx_nocache_copy: "on"
+receive_hashing: "on"
+scatter_gather: "on"
+rx_udp_gro_forwarding: "on"
+tx_udp_tnl_segmentation: "on"
+tx_udp_tnl_csum_segmentation: "on"
 
 ## Ethernet flow control
 ## https://en.wikipedia.org/wiki/Ethernet_flow_control
@@ -23,7 +35,7 @@ adaptive_tx: "on"
 rx_usecs: 256
 tx_usecs: 0
 
-## RX/TX queue length
+## RX/TX polling queue length
 rx_frames: 16
 tx_frames: 1
 
@@ -31,3 +43,9 @@ tx_frames: 1
 napi_defer_hard_irqs: 1
 gro_flush_timeout: 1
 threaded_napi: 1
+
+## RPS & RFS
+## https://docs.kernel.org/networking/scaling.html
+## https://www.suse.com/de-de/support/kb/doc/?id=000018430
+## https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/network-rps#network-rps
+rps: false
