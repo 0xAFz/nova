@@ -1,11 +1,11 @@
 ---
-- name: Create Nova directory
+- name: Make Nova directory
   file:
     path: "{{ config_dir }}"
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: 0755
 
 - name: Make NIC configuration script
   template:
