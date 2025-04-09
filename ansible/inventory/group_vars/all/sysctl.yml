@@ -28,7 +28,7 @@ sysctl_config:
   net.core.optmem_max: 65536
   net.ipv4.tcp_no_metrics_save: 0
   net.ipv4.tcp_fin_timeout: 1
-  net.ipv4.tcp_keepalive_time: 120
+  net.ipv4.tcp_keepalive_time: 60
   net.ipv4.tcp_ecn: 1
   net.ipv4.tcp_ecn_fallback: 1
   net.ipv4.tcp_sack: 1
@@ -73,7 +73,7 @@ sysctl_config:
   net.ipv4.conf.all.accept_source_route: 0
   net.ipv4.conf.all.accept_redirects: 0
   net.ipv4.icmp_echo_ignore_all: 0
-  net.ipv4.icmp_ratelimit: 100
+  net.ipv4.icmp_ratelimit: 50
   net.ipv4.icmp_ignore_bogus_error_responses: 1
   net.ipv4.ipfrag_high_thresh: 2097152
   net.ipv4.ipfrag_low_thresh: 1572864
@@ -89,17 +89,17 @@ sysctl_config:
   fs.file-max: 8388608
   vm.max_map_count: 1048576
   vm.swappiness: 0
-  vm.extfrag_threshold: 750
+  vm.extfrag_threshold: 500
   vm.min_slab_ratio: 10
-  vm.min_unmapped_ratio: 2
-  vm.watermark_boost_factor: 50
-  vm.watermark_scale_factor: 30
+  vm.min_unmapped_ratio: 5
+  vm.watermark_boost_factor: 150
+  vm.watermark_scale_factor: 10
   vm.zone_reclaim_mode: 1
-  vm.dirty_ratio: 10
-  vm.dirty_background_ratio: 5
-  vm.dirty_expire_centisecs: 1000
-  vm.dirty_writeback_centisecs: 300
-  vm.compaction_proactiveness: 50
+  vm.dirty_ratio: 5
+  vm.dirty_background_ratio: 2
+  vm.dirty_expire_centisecs: 500
+  vm.dirty_writeback_centisecs: 150
+  vm.compaction_proactiveness: 100
   vm.vfs_cache_pressure: 200
   vm.min_free_kbytes: 131072
   vm.overcommit_memory: 1
