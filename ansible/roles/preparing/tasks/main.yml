@@ -8,17 +8,17 @@
   tags: monitoring
   when: monitoring
 
-- name: Configure logging
-  import_tasks: logging.yml
-  tags: logging
+- name: Configure systemd services
+  import_tasks: systemd.yml
+  tags: systemd
 
-- name: Change limits.conf
+- name: Configure limits
   import_tasks: limits.yml
   tags: limits
 
 - name: Configure sshd
-  import_tasks: hardening.yml
-  tags: hardening
+  import_tasks: sshd.yml
+  tags: sshd
 
 - name: Confiugre DNS
   import_tasks: dns.yml
@@ -35,18 +35,14 @@
 
 - name: Configure nftables
   import_tasks: nftables.yml
-  tags: nftables
+  tags: firewall
   when: firewall == 'nftables'
 
-- name: Disable and stop unnecessary services
-  import_tasks: services.yml
-  tags: services
-
-- name: Apply sysctl settings
+- name: Configure sysctl settings
   import_tasks: sysctl.yml
   tags: sysctl
 
-- name: Samurai kernel
+- name: Install samurai kernel
   import_tasks: samurai.yml
   tags: samurai
   when: samurai
