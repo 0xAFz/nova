@@ -21,7 +21,7 @@
     name: x-ui
     state: restarted
 
-- name: Generate Python script for inbounds
+- name: Make Python script for inbounds
   template:
     src: inbounds.py.j2
     dest: /tmp/inbounds.py
@@ -39,4 +39,3 @@
   systemd:
     name: x-ui
     state: restarted
-
